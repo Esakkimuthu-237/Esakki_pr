@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PharmaCare – Stock & Expiry Manager</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-icon">💊</span>
+    <span class="logo-text">PharmaCare</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">🏠</span><span>Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-page="add">
+      <span class="nav-icon">➕</span><span>Add Medicine</span>
+    </a>
+    <a href="#" class="nav-item" data-page="stock">
+      <span class="nav-icon">📦</span><span>Stock List</span>
+    </a>
+    <a href="#" class="nav-item" data-page="alerts">
+      <span class="nav-icon">🔔</span><span>Alerts <span class="badge" id="alertBadge">0</span></span>
+    </a>
+    <a href="#" class="nav-item" data-page="reports">
+      <span class="nav-icon">📊</span><span>Reports</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="pharmacy-info">
+      <span class="ph-icon">🏥</span>
+      <div>
+        <div class="ph-name">City Pharmacy</div>
+        <div class="ph-sub">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div class="main-wrapper">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <button class="hamburger" id="hamburger">☰</button>
+    <div class="topbar-title" id="topbarTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="date-badge">📅 <span id="todayDate"></span></div>
+      <button class="notif-btn" id="notifBtn" title="Alerts">
+        🔔<span class="notif-dot" id="notifDot" style="display:none"></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE: DASHBOARD -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h1>Dashboard Overview</h1>
+      <p>Welcome back! Here's your pharmacy at a glance.</p>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card blue">
+        <div class="stat-icon">💊</div>
+        <div class="stat-info">
+          <div class="stat-number" id="statTotal">0</div>
+          <div class="stat-label">Total Medicines</div>
+        </div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-icon">⚠️</div>
+        <div class="stat-info">
+          <div class="stat-number" id="statExpired">0</div>
+          <div class="stat-label">Expired</div>
+        </div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <div class="stat-number" id="statExpiring">0</div>
+          <div class="stat-label">Expiring Soon (≤7 days)</div>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <div class="stat-number" id="statSafe">0</div>
+          <div class="stat-label">Safe Stock</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert-banner" id="alertBanner" style="display:none">
+      <div class="alert-banner-icon">🚨</div>
+      <div class="alert-banner-content">
+        <div class="alert-banner-title">Action Required</div>
+        <div class="alert-banner-msg" id="alertBannerMsg"></div>
+      </div>
+      <button class="alert-banner-cta" data-page="alerts">View Alerts →</button>
+    </div>
+    <div class="section-card">
+      <div class="section-card-header">
+        <h2>Recent Entries</h2>
+        <button class="btn-link" data-page="stock">View All →</button>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Medicine</th><th>Batch No.</th><th>Received</th>
+              <th>Marketed</th><th>Expiry</th><th>Qty</th><th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recentTbody">
+            <tr><td colspan="7" class="empty-row">No medicines added yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: ADD MEDICINE -->
+  <section class="page" id="page-add">
+    <div class="page-header">
+      <h1>Add Medicine</h1>
+      <p>Record a newly purchased or received medicine.</p>
+    </div>
+    <div class="form-card">
+      <div class="form-card-title"><span>📋</span> Medicine Details</div>
+      <form id="medicineForm" novalidate>
+        <div class="form-grid">
+          <div class="form-group span-2">
+            <label>Medicine Name *</label>
+            <input type="text" id="fName" placeholder="e.g. Paracetamol 500mg" required/>
+            <span class="form-error" id="errName"></span>
+          </div>
+          <div class="form-group">
+            <label>Generic Name</label>
+            <input type="text" id="fGeneric" placeholder="e.g. Acetaminophen"/>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="fCategory">
+              <option value="">Select category</option>
+              <option>Analgesic</option><option>Antibiotic</option>
+              <option>Antacid</option><option>Antifungal</option>
+              <option>Antihistamine</option><option>Antiviral</option>
+              <option>Cardiovascular</option><option>Diabetic</option>
+              <option>Vitamin / Supplement</option><option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Batch Number *</label>
+            <input type="text" id="fBatch" placeholder="e.g. BT2406A" required/>
+            <span class="form-error" id="errBatch"></span>
+          </div>
+          <div class="form-group">
+            <label>Supplier / Manufacturer</label>
+            <input type="text" id="fSupplier" placeholder="e.g. Sun Pharma"/>
+          </div>
+          <div class="form-group">
+            <label>Date Received *</label>
+            <input type="date" id="fReceived" required/>
+            <span class="form-error" id="errReceived"></span>
+          </div>
+          <div class="form-group">
+            <label>Marketed Date *</label>
+            <input type="date" id="fMarketed" required/>
+            <span class="form-error" id="errMarketed"></span>
+          </div>
+          <div class="form-group">
+            <label>Expiry Date *</label>
+            <input type="date" id="fExpiry" required/>
+            <span class="form-error" id="errExpiry"></span>
+          </div>
+          <div class="form-group">
+            <label>Quantity (units) *</label>
+            <input type="number" id="fQty" placeholder="e.g. 100" min="1" required/>
+            <span class="form-error" id="errQty"></span>
+          </div>
+          <div class="form-group">
+            <label>Unit Price (₹)</label>
+            <input type="number" id="fPrice" placeholder="e.g. 12.50" min="0" step="0.01"/>
+          </div>
+          <div class="form-group">
+            <label>Storage Condition</label>
+            <select id="fStorage">
+              <option value="">Select</option>
+              <option>Room Temperature</option>
+              <option>Refrigerated (2–8°C)</option>
+              <option>Frozen</option>
+              <option>Keep Away from Light</option>
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>Notes</label>
+            <textarea id="fNotes" rows="3" placeholder="Any additional notes…"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" id="clearFormBtn">Clear</button>
+          <button type="submit" class="btn-primary" id="saveBtn">
+            <span>💾</span> Save Medicine
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- PAGE: STOCK LIST -->
+  <section class="page" id="page-stock">
+    <div class="page-header">
+      <h1>Stock List</h1>
+      <p>Manage and search all medicines in inventory.</p>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search by name, batch, supplier…"/>
+      </div>
+      <div class="filter-chips">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="expired">Expired</button>
+        <button class="chip" data-filter="expiring">Expiring Soon</button>
+        <button class="chip" data-filter="safe">Safe</button>
+      </div>
+      <button class="btn-primary" id="exportBtn">⬇ Export CSV</button>
+    </div>
+    <div class="section-card no-padding">
+      <div class="table-wrapper">
+        <table class="data-table" id="stockTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Medicine</th><th>Batch No.</th>
+              <th>Received</th><th>Marketed</th><th>Expiry</th>
+              <th>Qty</th><th>Supplier</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="stockTbody">
+            <tr><td colspan="10" class="empty-row">No medicines added yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: ALERTS -->
+  <section class="page" id="page-alerts">
+    <div class="page-header">
+      <h1>Alerts</h1>
+      <p>Medicines that need your immediate attention.</p>
+    </div>
+    <div id="alertsContainer">
+      <div class="empty-state">
+        <div class="empty-icon">🎉</div>
+        <div class="empty-title">All Clear!</div>
+        <div class="empty-sub">No expired or soon-to-expire medicines.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PAGE: REPORTS -->
+  <section class="page" id="page-reports">
+    <div class="page-header">
+      <h1>Reports</h1>
+      <p>Analytics and summary for your pharmacy stock.</p>
+    </div>
+    <div class="report-grid">
+      <div class="section-card">
+        <div class="section-card-header"><h2>Stock by Category</h2></div>
+        <div id="catReport" class="report-list"></div>
+      </div>
+      <div class="section-card">
+        <div class="section-card-header"><h2>Expiry Timeline</h2></div>
+        <div id="timelineReport" class="timeline-list"></div>
+      </div>
+      <div class="section-card span-2">
+        <div class="section-card-header"><h2>Stock Value Summary</h2></div>
+        <div class="value-summary" id="valueSummary"></div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end main-wrapper -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle">Medicine Details</h2>
+      <button class="modal-close" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn-secondary" id="modalCloseBtn">Close</button>
+      <button class="btn-danger" id="modalDeleteBtn">🗑 Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
