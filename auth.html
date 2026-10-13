@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PharmaCare – Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--blue:#3b82f6;--blue-d:#1d4ed8;--green:#22c55e;--red:#ef4444;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--surface:#fff;}
+    body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+    .auth-card{background:var(--surface);border-radius:20px;padding:40px 44px;width:min(440px,100%);box-shadow:0 32px 80px rgba(0,0,0,.35);}
+    .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+    .auth-logo-icon{font-size:2.2rem;}
+    .auth-logo-text{font-size:1.5rem;font-weight:800;color:var(--text);}
+    .auth-logo-sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
+    .tab-row{display:flex;gap:0;margin-bottom:28px;background:#f1f5f9;border-radius:10px;padding:4px;}
+    .tab{flex:1;padding:9px;border:none;background:none;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+    .tab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+    .form-section{display:none;} .form-section.active{display:block;}
+    .form-group{margin-bottom:18px;}
+    .form-group label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+    .form-group input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:.9rem;font-family:inherit;transition:border-color .2s;}
+    .form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
+    .btn-auth{width:100%;padding:13px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35);transition:opacity .2s;margin-top:4px;}
+    .btn-auth:hover{opacity:.9;} .btn-auth:disabled{opacity:.6;cursor:not-allowed;}
+    .auth-msg{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:.85rem;display:none;}
+    .auth-msg.error{background:#fee2e2;color:#b91c1c;display:block;}
+    .auth-msg.success{background:#dcfce7;color:#15803d;display:block;}
+    .auth-msg.info{background:#dbeafe;color:#1d4ed8;display:block;}
+    .forgot-link{text-align:center;margin-top:14px;font-size:.82rem;}
+    .forgot-link a{color:var(--blue);text-decoration:none;font-weight:600;}
+    .forgot-link a:hover{text-decoration:underline;}
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .divider{text-align:center;margin:20px 0;color:var(--muted);font-size:.8rem;position:relative;}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border);}
+    .divider::before{left:0;} .divider::after{right:0;}
+    .note{background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:.8rem;color:var(--muted);margin-top:16px;line-height:1.6;}
+    .note strong{color:var(--text);}
+  </style>
+</head>
+<body>
+<div class="auth-card">
+  <div class="auth-logo">
+    <span class="auth-logo-icon">💊</span>
+    <div>
+      <div class="auth-logo-text">PharmaCare</div>
+      <div class="auth-logo-sub">Pharmacy Management System</div>
+    </div>
+  </div>
+
+  <!-- Tab Row -->
+  <div class="tab-row">
+    <button class="tab active" id="tabLogin" onclick="showTab('login')">Sign In</button>
+    <button class="tab" id="tabSignup" onclick="showTab('signup')">Create Account</button>
+  </div>
+
+  <!-- LOGIN FORM -->
+  <div class="form-section active" id="secLogin">
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password"/>
+    </div>
+    <button class="btn-auth" id="loginBtn" onclick="doLogin()">Sign In</button>
+    <div class="forgot-link"><a href="#" onclick="showTab('forgot')">Forgot password?</a></div>
+    <div class="auth-msg" id="loginMsg"></div>
+  </div>
+
+  <!-- SIGNUP FORM -->
+  <div class="form-section" id="secSignup">
+    <div class="form-group">
+      <label>Pharmacy Name</label>
+      <input type="text" id="signupPharmacy" placeholder="e.g. City Pharmacy"/>
+    </div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"/>
+    </div>
+    <div class="form-group">
+      <label>Password (min 6 characters)</label>
+      <input type="password" id="signupPassword" placeholder="Choose a strong password" autocomplete="new-password"/>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="signupConfirm" placeholder="Repeat password" autocomplete="new-password"/>
+    </div>
+    <button class="btn-auth" id="signupBtn" onclick="doSignup()">Create Account</button>
+    <div class="auth-msg" id="signupMsg"></div>
+    <div class="note"><strong>Note:</strong> After signing up, check your email inbox and click the verification link before logging in.</div>
+  </div>
+
+  <!-- FORGOT PASSWORD FORM -->
+  <div class="form-section" id="secForgot">
+    <p style="color:var(--muted);font-size:.88rem;margin-bottom:20px">Enter your email and we will send you a password reset link.</p>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="forgotEmail" placeholder="you@example.com"/>
+    </div>
+    <button class="btn-auth" id="forgotBtn" onclick="doForgot()">Send Reset Link</button>
+    <div class="forgot-link" style="margin-top:14px"><a href="#" onclick="showTab('login')">← Back to Sign In</a></div>
+    <div class="auth-msg" id="forgotMsg"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ---- Check if already logged in ---- */
+(async function() {
+  const { data: { session } } = await SUPA.auth.getSession();
+  if (session) window.location.href = 'index.html';
+})();
+
+/* ---- Tab switching ---- */
+function showTab(tab) {
+  document.querySelectorAll('.tab,.form-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add('active');
+  document.getElementById('sec' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+/* ---- Sign In ---- */
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd   = document.getElementById('loginPassword').value;
+  const btn   = document.getElementById('loginBtn');
+  const msg   = document.getElementById('loginMsg');
+  msg.className = 'auth-msg'; msg.textContent = '';
+  if (!email || !pwd) { showMsg(msg,'error','Please fill in all fields.'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Signing in…';
+  const { data, error } = await SUPA.auth.signInWithPassword({ email, password: pwd });
+  btn.disabled = false; btn.innerHTML = 'Sign In';
+  if (error) { showMsg(msg,'error', error.message); return; }
+  window.location.href = 'index.html';
+}
+
+/* ---- Sign Up ---- */
+async function doSignup() {
+  const phName = document.getElementById('signupPharmacy').value.trim();
+  const email  = document.getElementById('signupEmail').value.trim();
+  const pwd    = document.getElementById('signupPassword').value;
+  const conf   = document.getElementById('signupConfirm').value;
+  const btn    = document.getElementById('signupBtn');
+  const msg    = document.getElementById('signupMsg');
+  msg.className = 'auth-msg'; msg.textContent = '';
+  if (!email || !pwd) { showMsg(msg,'error','Please fill in all fields.'); return; }
+  if (pwd.length < 6) { showMsg(msg,'error','Password must be at least 6 characters.'); return; }
+  if (pwd !== conf)   { showMsg(msg,'error','Passwords do not match.'); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating account…';
+  const { data, error } = await SUPA.auth.signUp({
+    email, password: pwd,
+    options: { data: { pharmacy_name: phName || 'My Pharmacy' } }
+  });
+  btn.disabled = false; btn.innerHTML = 'Create Account';
+  if (error) { showMsg(msg,'error', error.message); return; }
+  showMsg(msg,'success','Account created! Please check your email and click the verification link, then sign in.');
+}
+
+/* ---- Forgot Password ---- */
+async function doForgot() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const btn   = document.getElementById('forgotBtn');
+  const msg   = document.getElementById('forgotMsg');
+  msg.className = 'auth-msg'; msg.textContent = '';
+  if (!email) { showMsg(msg,'error','Please enter your email address.'); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
+  const { error } = await SUPA.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + '/Esakki_pr/auth.html'
+  });
+  btn.disabled = false; btn.innerHTML = 'Send Reset Link';
+  if (error) { showMsg(msg,'error', error.message); return; }
+  showMsg(msg,'success','Reset link sent! Check your email inbox.');
+}
+
+/* ---- Enter key support ---- */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.form-section.active').id;
+  if (active === 'secLogin')  doLogin();
+  if (active === 'secSignup') doSignup();
+  if (active === 'secForgot') doForgot();
+});
+
+function showMsg(el, type, text) {
+  el.className = 'auth-msg ' + type;
+  el.textContent = text;
+}
+</script>
+</body>
+</html>

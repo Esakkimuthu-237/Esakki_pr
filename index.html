@@ -1,9 +1,9 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PharmaCare – Stock & Expiry Manager</title>
+  <title>PharmaCare – Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
@@ -16,83 +16,54 @@
     <span class="logo-text">PharmaCare</span>
   </div>
   <nav class="sidebar-nav">
-    <a href="#" class="nav-item active" data-page="dashboard">
-      <span class="nav-icon">🏠</span><span>Dashboard</span>
-    </a>
-    <a href="#" class="nav-item" data-page="add">
-      <span class="nav-icon">➕</span><span>Add Medicine</span>
-    </a>
-    <a href="#" class="nav-item" data-page="stock">
-      <span class="nav-icon">📦</span><span>Stock List</span>
-    </a>
-    <a href="#" class="nav-item" data-page="alerts">
-      <span class="nav-icon">🔔</span><span>Alerts <span class="badge" id="alertBadge">0</span></span>
-    </a>
-    <a href="#" class="nav-item" data-page="reports">
-      <span class="nav-icon">📊</span><span>Reports</span>
-    </a>
+    <a href="#" class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span><span>Dashboard</span></a>
+    <a href="#" class="nav-item" data-page="add"><span class="nav-icon">➕</span><span>Add Medicine</span></a>
+    <a href="#" class="nav-item" data-page="stock"><span class="nav-icon">📦</span><span>Stock List</span></a>
+    <a href="#" class="nav-item" data-page="billing"><span class="nav-icon">🧾</span><span>Billing</span></a>
+    <a href="#" class="nav-item" data-page="invoices"><span class="nav-icon">📋</span><span>Invoices</span></a>
+    <a href="#" class="nav-item" data-page="suppliers"><span class="nav-icon">🚚</span><span>Suppliers</span></a>
+    <a href="#" class="nav-item" data-page="reports"><span class="nav-icon">📊</span><span>Reports</span></a>
+    <a href="#" class="nav-item" data-page="alerts"><span class="nav-icon">🔔</span><span>Alerts <span class="badge" id="alertBadge" style="display:none">!</span></span></a>
+    <a href="#" class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span><span>Settings</span></a>
   </nav>
   <div class="sidebar-footer">
     <div class="pharmacy-info">
       <span class="ph-icon">🏥</span>
-      <div>
-        <div class="ph-name">City Pharmacy</div>
-        <div class="ph-sub">Admin Panel</div>
+      <div style="flex:1;min-width:0">
+        <div class="ph-name" id="sidebarPhName">Loading…</div>
+        <div class="ph-sub" id="sidebarUserEmail" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
       </div>
     </div>
+    <button class="btn-logout" onclick="signOut()" title="Sign Out">⏻</button>
   </div>
 </aside>
 
-<!-- MAIN WRAPPER -->
+<!-- MAIN -->
 <div class="main-wrapper">
-
-  <!-- TOP BAR -->
   <header class="topbar">
     <button class="hamburger" id="hamburger">☰</button>
     <div class="topbar-title" id="topbarTitle">Dashboard</div>
     <div class="topbar-right">
       <div class="date-badge">📅 <span id="todayDate"></span></div>
-      <button class="notif-btn" id="notifBtn" title="Alerts">
-        🔔<span class="notif-dot" id="notifDot" style="display:none"></span>
-      </button>
+      <button class="notif-btn" id="notifBtn" title="Alerts">🔔<span class="notif-dot" id="notifDot" style="display:none"></span></button>
     </div>
   </header>
 
-  <!-- PAGE: DASHBOARD -->
+  <!-- ═══ DASHBOARD ═══ -->
   <section class="page active" id="page-dashboard">
     <div class="page-header">
       <h1>Dashboard Overview</h1>
-      <p>Welcome back! Here's your pharmacy at a glance.</p>
+      <p id="dashGreet">Welcome back! Here's your pharmacy at a glance.</p>
     </div>
     <div class="stat-grid">
-      <div class="stat-card blue">
-        <div class="stat-icon">💊</div>
-        <div class="stat-info">
-          <div class="stat-number" id="statTotal">0</div>
-          <div class="stat-label">Total Medicines</div>
-        </div>
-      </div>
-      <div class="stat-card red">
-        <div class="stat-icon">⚠️</div>
-        <div class="stat-info">
-          <div class="stat-number" id="statExpired">0</div>
-          <div class="stat-label">Expired</div>
-        </div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-icon">⏳</div>
-        <div class="stat-info">
-          <div class="stat-number" id="statExpiring">0</div>
-          <div class="stat-label">Expiring Soon (≤7 days)</div>
-        </div>
-      </div>
-      <div class="stat-card green">
-        <div class="stat-icon">✅</div>
-        <div class="stat-info">
-          <div class="stat-number" id="statSafe">0</div>
-          <div class="stat-label">Safe Stock</div>
-        </div>
-      </div>
+      <div class="stat-card blue"><div class="stat-icon">💊</div><div class="stat-info"><div class="stat-number" id="statTotal">—</div><div class="stat-label">Total Medicines</div></div></div>
+      <div class="stat-card purple"><div class="stat-icon">📦</div><div class="stat-info"><div class="stat-number" id="statUnits">—</div><div class="stat-label">Total Stock Units</div></div></div>
+      <div class="stat-card red"><div class="stat-icon">⚠️</div><div class="stat-info"><div class="stat-number" id="statExpired">—</div><div class="stat-label">Expired Batches</div></div></div>
+      <div class="stat-card orange"><div class="stat-icon">⏳</div><div class="stat-info"><div class="stat-number" id="statExpiring">—</div><div class="stat-label">Expiring ≤ 7 Days</div></div></div>
+      <div class="stat-card yellow"><div class="stat-icon">📉</div><div class="stat-info"><div class="stat-number" id="statLow">—</div><div class="stat-label">Low Stock Items</div></div></div>
+      <div class="stat-card teal"><div class="stat-icon">💰</div><div class="stat-info"><div class="stat-number" id="statTodaySales">—</div><div class="stat-label">Today's Sales (₹)</div></div></div>
+      <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-info"><div class="stat-number" id="statMonthlySales">—</div><div class="stat-label">Monthly Sales (₹)</div></div></div>
+      <div class="stat-card indigo"><div class="stat-icon">🧾</div><div class="stat-info"><div class="stat-number" id="statTodayCount">—</div><div class="stat-label">Today's Bills</div></div></div>
     </div>
     <div class="alert-banner" id="alertBanner" style="display:none">
       <div class="alert-banner-icon">🚨</div>
@@ -104,207 +75,275 @@
     </div>
     <div class="section-card">
       <div class="section-card-header">
-        <h2>Recent Entries</h2>
+        <h2>Recent Stock</h2>
         <button class="btn-link" data-page="stock">View All →</button>
       </div>
       <div class="table-wrapper">
         <table class="data-table">
-          <thead>
-            <tr>
-              <th>Medicine</th><th>Batch No.</th><th>Received</th>
-              <th>Marketed</th><th>Expiry</th><th>Qty</th><th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="recentTbody">
-            <tr><td colspan="7" class="empty-row">No medicines added yet.</td></tr>
-          </tbody>
+          <thead><tr><th>Medicine</th><th>Batch</th><th>Expiry</th><th>Qty</th><th>Price (₹)</th><th>Status</th></tr></thead>
+          <tbody id="recentTbody"><tr><td colspan="6" class="empty-row"><span class="spinner-sm"></span> Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- PAGE: ADD MEDICINE -->
+  <!-- ═══ ADD MEDICINE ═══ -->
   <section class="page" id="page-add">
-    <div class="page-header">
-      <h1>Add Medicine</h1>
-      <p>Record a newly purchased or received medicine.</p>
-    </div>
+    <div class="page-header"><h1>Add Medicine</h1><p>Record a new medicine with its first batch details.</p></div>
     <div class="form-card">
-      <div class="form-card-title"><span>📋</span> Medicine Details</div>
+      <div class="form-card-title"><span>📋</span> Medicine &amp; Batch Details</div>
       <form id="medicineForm" novalidate>
+        <div class="form-section-label">🏷 Product Information</div>
         <div class="form-grid">
-          <div class="form-group span-2">
-            <label>Medicine Name *</label>
-            <input type="text" id="fName" placeholder="e.g. Paracetamol 500mg" required/>
-            <span class="form-error" id="errName"></span>
-          </div>
-          <div class="form-group">
-            <label>Generic Name</label>
-            <input type="text" id="fGeneric" placeholder="e.g. Acetaminophen"/>
-          </div>
-          <div class="form-group">
-            <label>Category</label>
-            <select id="fCategory">
-              <option value="">Select category</option>
-              <option>Analgesic</option><option>Antibiotic</option>
-              <option>Antacid</option><option>Antifungal</option>
-              <option>Antihistamine</option><option>Antiviral</option>
-              <option>Cardiovascular</option><option>Diabetic</option>
-              <option>Vitamin / Supplement</option><option>Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Batch Number *</label>
-            <input type="text" id="fBatch" placeholder="e.g. BT2406A" required/>
-            <span class="form-error" id="errBatch"></span>
-          </div>
-          <div class="form-group">
-            <label>Supplier / Manufacturer</label>
-            <input type="text" id="fSupplier" placeholder="e.g. Sun Pharma"/>
-          </div>
-          <div class="form-group">
-            <label>Date Received *</label>
-            <input type="date" id="fReceived" required/>
-            <span class="form-error" id="errReceived"></span>
-          </div>
-          <div class="form-group">
-            <label>Marketed Date *</label>
-            <input type="date" id="fMarketed" required/>
-            <span class="form-error" id="errMarketed"></span>
-          </div>
-          <div class="form-group">
-            <label>Expiry Date *</label>
-            <input type="date" id="fExpiry" required/>
-            <span class="form-error" id="errExpiry"></span>
-          </div>
-          <div class="form-group">
-            <label>Quantity (units) *</label>
-            <input type="number" id="fQty" placeholder="e.g. 100" min="1" required/>
-            <span class="form-error" id="errQty"></span>
-          </div>
-          <div class="form-group">
-            <label>Unit Price (₹)</label>
-            <input type="number" id="fPrice" placeholder="e.g. 12.50" min="0" step="0.01"/>
-          </div>
-          <div class="form-group">
-            <label>Storage Condition</label>
-            <select id="fStorage">
-              <option value="">Select</option>
-              <option>Room Temperature</option>
-              <option>Refrigerated (2–8°C)</option>
-              <option>Frozen</option>
-              <option>Keep Away from Light</option>
-            </select>
-          </div>
-          <div class="form-group span-2">
-            <label>Notes</label>
-            <textarea id="fNotes" rows="3" placeholder="Any additional notes…"></textarea>
-          </div>
+          <div class="form-group span-2"><label>Medicine Name *</label><input type="text" id="fName" placeholder="e.g. Paracetamol 500mg" required/><span class="form-error" id="errName"></span></div>
+          <div class="form-group"><label>Generic Name</label><input type="text" id="fGeneric" placeholder="e.g. Acetaminophen"/></div>
+          <div class="form-group"><label>Brand</label><input type="text" id="fBrand" placeholder="e.g. Calpol"/></div>
+          <div class="form-group"><label>Category</label><select id="fCategory"><option value="">Select category</option><option>Analgesic</option><option>Antibiotic</option><option>Antacid</option><option>Antifungal</option><option>Antihistamine</option><option>Antiviral</option><option>Cardiovascular</option><option>Diabetic</option><option>Vitamin / Supplement</option><option>Syrup</option><option>Injection</option><option>Other</option></select></div>
+          <div class="form-group"><label>Manufacturer</label><input type="text" id="fManufacturer" placeholder="e.g. Sun Pharma"/></div>
+          <div class="form-group"><label>HSN Code</label><input type="text" id="fHsn" placeholder="e.g. 3004"/></div>
+          <div class="form-group"><label>GST % *</label><select id="fGst"><option value="0">0% (Exempt)</option><option value="5">5%</option><option value="12" selected>12%</option><option value="18">18%</option><option value="28">28%</option></select></div>
+          <div class="form-group"><label>Barcode</label><input type="text" id="fBarcode" placeholder="Optional"/></div>
+          <div class="form-group"><label>Storage Condition</label><select id="fStorage"><option value="">Select</option><option>Room Temperature</option><option>Refrigerated (2–8°C)</option><option>Frozen</option><option>Keep Away from Light</option></select></div>
+          <div class="form-group"><label>Min Stock Level</label><input type="number" id="fMinStock" placeholder="10" min="0" value="10"/></div>
+        </div>
+        <div class="form-section-label" style="margin-top:24px">📦 First Batch Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Batch Number *</label><input type="text" id="fBatch" placeholder="e.g. BT2406A" required/><span class="form-error" id="errBatch"></span></div>
+          <div class="form-group"><label>Supplier</label><select id="fSupplierId"><option value="">None / Unknown</option></select></div>
+          <div class="form-group"><label>Manufactured Date</label><input type="date" id="fManufactured"/></div>
+          <div class="form-group"><label>Marketed Date</label><input type="date" id="fMarketed"/></div>
+          <div class="form-group"><label>Date Received *</label><input type="date" id="fReceived" required/><span class="form-error" id="errReceived"></span></div>
+          <div class="form-group"><label>Expiry Date *</label><input type="date" id="fExpiry" required/><span class="form-error" id="errExpiry"></span></div>
+          <div class="form-group"><label>Quantity *</label><input type="number" id="fQty" placeholder="100" min="1" required/><span class="form-error" id="errQty"></span></div>
+          <div class="form-group"><label>Purchase Price / unit (₹)</label><input type="number" id="fPurchasePrice" placeholder="10.00" min="0" step="0.01"/></div>
+          <div class="form-group"><label>Selling Price / unit (₹)</label><input type="number" id="fSellingPrice" placeholder="12.50" min="0" step="0.01"/></div>
+        </div>
+        <div class="form-grid" style="margin-top:16px">
+          <div class="form-group span-2"><label>Notes</label><textarea id="fNotes" rows="2" placeholder="Any additional notes…"></textarea></div>
         </div>
         <div class="form-actions">
           <button type="button" class="btn-secondary" id="clearFormBtn">Clear</button>
-          <button type="submit" class="btn-primary" id="saveBtn">
-            <span>💾</span> Save Medicine
-          </button>
+          <button type="submit" class="btn-primary" id="saveBtn">💾 Save Medicine</button>
         </div>
       </form>
     </div>
   </section>
 
-  <!-- PAGE: STOCK LIST -->
+  <!-- ═══ STOCK LIST ═══ -->
   <section class="page" id="page-stock">
-    <div class="page-header">
-      <h1>Stock List</h1>
-      <p>Manage and search all medicines in inventory.</p>
-    </div>
+    <div class="page-header"><h1>Stock List</h1><p>Search, edit, and manage your complete medicine inventory.</p></div>
     <div class="toolbar">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search by name, batch, supplier…"/>
-      </div>
+      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="searchInput" placeholder="Search medicine, batch, supplier…"/></div>
       <div class="filter-chips">
         <button class="chip active" data-filter="all">All</button>
         <button class="chip" data-filter="expired">Expired</button>
         <button class="chip" data-filter="expiring">Expiring Soon</button>
+        <button class="chip" data-filter="low">Low Stock</button>
         <button class="chip" data-filter="safe">Safe</button>
       </div>
       <button class="btn-primary" id="exportBtn">⬇ Export CSV</button>
     </div>
     <div class="section-card no-padding">
       <div class="table-wrapper">
-        <table class="data-table" id="stockTable">
-          <thead>
-            <tr>
-              <th>#</th><th>Medicine</th><th>Batch No.</th>
-              <th>Received</th><th>Marketed</th><th>Expiry</th>
-              <th>Qty</th><th>Supplier</th><th>Status</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="stockTbody">
-            <tr><td colspan="10" class="empty-row">No medicines added yet.</td></tr>
-          </tbody>
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Medicine</th><th>Category</th><th>Batch</th><th>Received</th><th>Marketed</th><th>Expiry</th><th>Qty</th><th>Sell ₹</th><th>GST%</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="stockTbody"><tr><td colspan="12" class="empty-row"><span class="spinner-sm"></span> Loading…</td></tr></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- PAGE: ALERTS -->
-  <section class="page" id="page-alerts">
-    <div class="page-header">
-      <h1>Alerts</h1>
-      <p>Medicines that need your immediate attention.</p>
-    </div>
-    <div id="alertsContainer">
-      <div class="empty-state">
-        <div class="empty-icon">🎉</div>
-        <div class="empty-title">All Clear!</div>
-        <div class="empty-sub">No expired or soon-to-expire medicines.</div>
+  <!-- ═══ BILLING ═══ -->
+  <section class="page" id="page-billing">
+    <div class="page-header"><h1>New Bill</h1><p>Search medicines, add to cart, and generate an invoice.</p></div>
+    <div class="billing-layout">
+      <!-- LEFT: Search + Cart -->
+      <div class="billing-left">
+        <div class="form-card" style="margin-bottom:20px">
+          <div class="form-card-title">👤 Customer (Optional)</div>
+          <div class="form-grid">
+            <div class="form-group"><label>Customer Name</label><input type="text" id="bCustName" placeholder="Walk-in customer"/></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="bCustPhone" placeholder="Mobile number"/></div>
+          </div>
+        </div>
+        <div class="form-card">
+          <div class="form-card-title">🔍 Add Medicine to Cart</div>
+          <div class="search-wrap" style="margin-bottom:14px"><span class="search-icon">🔍</span><input type="text" id="billSearch" placeholder="Type medicine name to search…" autocomplete="off"/></div>
+          <div id="billSearchResults" class="search-dropdown"></div>
+          <!-- Selected item form -->
+          <div id="addItemForm" style="display:none" class="add-item-form">
+            <div class="selected-med-name" id="selMedName"></div>
+            <div class="form-grid" style="margin-top:12px">
+              <div class="form-group"><label>Batch (Expiry)</label><select id="selBatch"></select></div>
+              <div class="form-group"><label>Qty *</label><input type="number" id="selQty" value="1" min="1"/></div>
+              <div class="form-group"><label>Unit Price ₹</label><input type="number" id="selPrice" step="0.01" min="0"/></div>
+              <div class="form-group"><label>Discount %</label><input type="number" id="selDisc" value="0" min="0" max="100"/></div>
+            </div>
+            <div class="form-actions" style="margin-top:12px">
+              <button class="btn-secondary" onclick="cancelAddItem()">Cancel</button>
+              <button class="btn-primary" onclick="addToCart()">➕ Add to Cart</button>
+            </div>
+          </div>
+        </div>
+        <!-- Cart -->
+        <div class="form-card" style="margin-top:20px">
+          <div class="form-card-title">🛒 Cart</div>
+          <div class="table-wrapper">
+            <table class="data-table" id="cartTable">
+              <thead><tr><th>Medicine</th><th>Batch</th><th>Qty</th><th>Price</th><th>Disc%</th><th>GST%</th><th>Total</th><th></th></tr></thead>
+              <tbody id="cartTbody"><tr><td colspan="8" class="empty-row">Cart is empty. Search a medicine above.</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- RIGHT: Summary -->
+      <div class="billing-right">
+        <div class="form-card bill-summary-card">
+          <div class="form-card-title">📄 Bill Summary</div>
+          <div class="bill-summary-rows">
+            <div class="bs-row"><span>Subtotal</span><span id="bsSubtotal">₹0.00</span></div>
+            <div class="bs-row"><span>Discount</span><span id="bsDiscount" class="text-red">-₹0.00</span></div>
+            <div class="bs-row"><span>GST</span><span id="bsGst">+₹0.00</span></div>
+            <div class="bs-row grand"><span>Grand Total</span><span id="bsGrand">₹0.00</span></div>
+          </div>
+          <div class="form-group" style="margin-top:18px"><label>Payment Method</label>
+            <select id="bPayment"><option value="cash">💵 Cash</option><option value="upi">📱 UPI</option><option value="card">💳 Card</option><option value="credit">📒 Credit</option></select>
+          </div>
+          <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="bAmountPaid" placeholder="0.00" step="0.01" min="0"/></div>
+          <div class="form-group"><label>Notes</label><input type="text" id="bNotes" placeholder="Optional…"/></div>
+          <button class="btn-primary" style="width:100%;margin-top:10px;justify-content:center" onclick="saveBill()">💾 Save &amp; Print Bill</button>
+          <button class="btn-secondary" style="width:100%;margin-top:8px;justify-content:center" onclick="clearCart()">🗑 Clear Cart</button>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- PAGE: REPORTS -->
+  <!-- ═══ INVOICES ═══ -->
+  <section class="page" id="page-invoices">
+    <div class="page-header"><h1>Invoice History</h1><p>View, reprint, or cancel past bills.</p></div>
+    <div class="toolbar" style="margin-bottom:20px">
+      <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="invSearch" placeholder="Search invoice number or customer…"/></div>
+      <input type="date" id="invFrom" style="border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:.88rem"/>
+      <input type="date" id="invTo"   style="border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:.88rem"/>
+      <button class="btn-primary" onclick="loadInvoices()">🔍 Filter</button>
+    </div>
+    <div class="section-card no-padding">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>Invoice #</th><th>Date</th><th>Customer</th><th>Items</th><th>GST</th><th>Total ₹</th><th>Payment</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="invTbody"><tr><td colspan="9" class="empty-row"><span class="spinner-sm"></span> Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SUPPLIERS ═══ -->
+  <section class="page" id="page-suppliers">
+    <div class="page-header"><h1>Suppliers</h1><p>Manage your medicine suppliers and distributors.</p></div>
+    <div class="toolbar"><button class="btn-primary" onclick="openSupplierModal()">➕ Add Supplier</button></div>
+    <div class="section-card no-padding">
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr><th>#</th><th>Supplier Name</th><th>Contact Person</th><th>Phone</th><th>GST No.</th><th>Drug License</th><th>Actions</th></tr></thead>
+          <tbody id="supplierTbody"><tr><td colspan="7" class="empty-row"><span class="spinner-sm"></span> Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ REPORTS ═══ -->
   <section class="page" id="page-reports">
-    <div class="page-header">
-      <h1>Reports</h1>
-      <p>Analytics and summary for your pharmacy stock.</p>
+    <div class="page-header"><h1>Reports</h1><p>Analytics and summaries for your pharmacy.</p></div>
+    <div class="toolbar" style="margin-bottom:24px">
+      <input type="date" id="repFrom" style="border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:.88rem"/>
+      <input type="date" id="repTo" style="border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-size:.88rem"/>
+      <button class="btn-primary" onclick="loadReports()">📊 Generate</button>
     </div>
     <div class="report-grid">
-      <div class="section-card">
-        <div class="section-card-header"><h2>Stock by Category</h2></div>
-        <div id="catReport" class="report-list"></div>
+      <div class="section-card"><div class="section-card-header"><h2>Sales Summary</h2></div><div id="salesSummary" class="report-list"></div></div>
+      <div class="section-card"><div class="section-card-header"><h2>Top Medicines (by qty sold)</h2></div><div id="topMeds" class="report-list"></div></div>
+      <div class="section-card span-2"><div class="section-card-header"><h2>Stock Value</h2></div><div class="value-summary" id="stockValue"></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ ALERTS ═══ -->
+  <section class="page" id="page-alerts">
+    <div class="page-header"><h1>Alerts</h1><p>Medicines requiring immediate attention.</p></div>
+    <div id="alertsContainer"><div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading…</div></div></div>
+  </section>
+
+  <!-- ═══ SETTINGS ═══ -->
+  <section class="page" id="page-settings">
+    <div class="page-header"><h1>Settings</h1><p>Update your pharmacy profile.</p></div>
+    <div class="form-card" style="max-width:600px">
+      <div class="form-card-title">🏥 Pharmacy Profile</div>
+      <div class="form-grid">
+        <div class="form-group span-2"><label>Pharmacy Name</label><input type="text" id="setPhName"/></div>
+        <div class="form-group span-2"><label>Address</label><textarea id="setPhAddr" rows="2"></textarea></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="setPhPhone"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="setPhEmail"/></div>
+        <div class="form-group"><label>GST Number</label><input type="text" id="setPhGst"/></div>
+        <div class="form-group"><label>Drug License No.</label><input type="text" id="setPhLicense"/></div>
       </div>
-      <div class="section-card">
-        <div class="section-card-header"><h2>Expiry Timeline</h2></div>
-        <div id="timelineReport" class="timeline-list"></div>
-      </div>
-      <div class="section-card span-2">
-        <div class="section-card-header"><h2>Stock Value Summary</h2></div>
-        <div class="value-summary" id="valueSummary"></div>
-      </div>
+      <div class="form-actions"><button class="btn-primary" onclick="saveSettings()">💾 Save Profile</button></div>
     </div>
   </section>
 
 </div><!-- end main-wrapper -->
 
-<!-- MODAL -->
+<!-- MODAL: View / Edit Medicine -->
 <div class="modal-overlay" id="modalOverlay">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <h2 id="modalTitle">Medicine Details</h2>
-      <button class="modal-close" id="modalClose">✕</button>
-    </div>
+  <div class="modal">
+    <div class="modal-header"><h2 id="modalTitle">Details</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
-      <button class="btn-secondary" id="modalCloseBtn">Close</button>
+      <button class="btn-secondary" onclick="closeModal()">Close</button>
       <button class="btn-danger" id="modalDeleteBtn">🗑 Delete</button>
     </div>
   </div>
 </div>
 
+<!-- MODAL: Supplier -->
+<div class="modal-overlay" id="supModalOverlay">
+  <div class="modal">
+    <div class="modal-header"><h2 id="supModalTitle">Add Supplier</h2><button class="modal-close" onclick="closeSupModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group span-2"><label>Supplier Name *</label><input type="text" id="supName"/></div>
+        <div class="form-group"><label>Contact Person</label><input type="text" id="supContact"/></div>
+        <div class="form-group"><label>Phone</label><input type="text" id="supPhone"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="supEmail"/></div>
+        <div class="form-group"><label>GST Number</label><input type="text" id="supGst"/></div>
+        <div class="form-group"><label>Drug License No.</label><input type="text" id="supLicense"/></div>
+        <div class="form-group span-2"><label>Address</label><textarea id="supAddress" rows="2"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeSupModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveSupplier()">💾 Save Supplier</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT INVOICE (hidden, used for print) -->
+<div id="printArea" style="display:none"></div>
+
 <!-- TOAST -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- LOADING OVERLAY -->
+<div id="loadingOverlay" style="display:none;position:fixed;inset:0;background:rgba(255,255,255,.8);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px">
+  <div class="spinner-lg"></div>
+  <div style="font-weight:600;color:var(--muted)">Loading…</div>
+</div>
+
+<!-- Scripts: Supabase CDN first, then our files -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="db.js"></script>
 <script src="app.js"></script>
+<script src="billing.js"></script>
+<script src="suppliers.js"></script>
+<script src="reports.js"></script>
 </body>
 </html>
