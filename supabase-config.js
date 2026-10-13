@@ -8,7 +8,7 @@
    4. Save this file and push to GitHub
    ================================================================ */
 
-const SUPABASE_URL      = 'https://nakgzpvzicsmijowcesw.supabase.co/rest/v1/';        // e.g. https://abcxyz.supabase.co
+const SUPABASE_URL      = 'https://nakgzpvzicsmijowcesw.supabase.co';        // e.g. https://abcxyz.supabase.co
 const SUPABASE_ANON_KEY = 'sb_publishable_zg6cwjAoWTBZ4BMxnDwXbw_7gaX3HZ1';   // long eyJ... string
 
 /* ----- Initialise the Supabase client using CDN version --------- */
