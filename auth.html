@@ -9,41 +9,107 @@
   <script src="supabase-config.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{--blue:#3b82f6;--blue-d:#1d4ed8;--green:#22c55e;--red:#ef4444;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--surface:#fff;}
-    body{font-family:'Inter',sans-serif;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 60%,#0f172a 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
-    .auth-card{background:var(--surface);border-radius:20px;padding:40px 44px;width:min(440px,100%);box-shadow:0 32px 80px rgba(0,0,0,.35);}
-    .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
-    .auth-logo-icon{font-size:2.2rem;}
-    .auth-logo-text{font-size:1.5rem;font-weight:800;color:var(--text);}
-    .auth-logo-sub{font-size:.78rem;color:var(--muted);margin-top:2px;}
-    .tab-row{display:flex;gap:0;margin-bottom:28px;background:#f1f5f9;border-radius:10px;padding:4px;}
-    .tab{flex:1;padding:9px;border:none;background:none;border-radius:8px;font-size:.88rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
+    :root{
+      --blue:#3b82f6;--blue-d:#1d4ed8;--green:#22c55e;--green-d:#15803d;
+      --red:#ef4444;--text:#1e293b;--muted:#64748b;--border:#e2e8f0;--surface:#fff;
+    }
+    body{
+      font-family:'Inter',sans-serif;min-height:100vh;
+      background:linear-gradient(135deg,#0f172a 0%,#1a2f58 50%,#0f172a 100%);
+      display:flex;align-items:center;justify-content:center;padding:20px;
+    }
+    /* ── Card ── */
+    .auth-card{
+      background:var(--surface);border-radius:20px;padding:36px 40px;
+      width:min(460px,100%);box-shadow:0 32px 80px rgba(0,0,0,.4);
+    }
+    /* ── Logo ── */
+    .auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;}
+    .auth-logo-icon{font-size:2rem;}
+    .auth-logo-text{font-size:1.45rem;font-weight:800;color:var(--text);}
+    .auth-logo-sub{font-size:.76rem;color:var(--muted);margin-top:2px;}
+    /* ── Tabs ── */
+    .tab-row{display:flex;margin-bottom:24px;background:#f1f5f9;border-radius:10px;padding:4px;gap:0;}
+    .tab{flex:1;padding:9px;border:none;background:none;border-radius:7px;font-size:.87rem;font-weight:600;color:var(--muted);cursor:pointer;transition:all .2s;}
     .tab.active{background:var(--surface);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.1);}
+    /* ── Form sections ── */
     .form-section{display:none;} .form-section.active{display:block;}
-    .form-group{margin-bottom:18px;}
-    .form-group label{display:block;font-size:.82rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
-    .form-group input{width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:.9rem;font-family:inherit;transition:border-color .2s;}
+    .form-group{margin-bottom:16px;position:relative;}
+    .form-group label{display:block;font-size:.81rem;font-weight:600;color:var(--muted);margin-bottom:6px;}
+    .form-group input{
+      width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;
+      font-size:.9rem;font-family:inherit;transition:border-color .2s,box-shadow .2s;background:#fafbff;
+    }
     .form-group input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(59,130,246,.12);}
-    .btn-auth{width:100%;padding:13px;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35);transition:opacity .2s;margin-top:4px;}
+    .form-group.has-toggle input{padding-right:44px;}
+    .toggle-pw{
+      position:absolute;right:12px;bottom:11px;background:none;border:none;cursor:pointer;
+      color:var(--muted);font-size:.95rem;padding:2px;line-height:1;
+    }
+    .toggle-pw:hover{color:var(--text);}
+    /* ── Buttons ── */
+    .btn-auth{
+      width:100%;padding:12px;border:none;border-radius:10px;font-size:.93rem;
+      font-weight:700;cursor:pointer;background:linear-gradient(135deg,var(--blue),#6366f1);
+      color:#fff;box-shadow:0 4px 14px rgba(59,130,246,.35);transition:opacity .2s;margin-top:4px;
+    }
     .btn-auth:hover{opacity:.9;} .btn-auth:disabled{opacity:.6;cursor:not-allowed;}
-    .auth-msg{margin-top:14px;padding:12px 14px;border-radius:9px;font-size:.85rem;display:none;}
+    /* ── Divider ── */
+    .divider{text-align:center;margin:18px 0;color:var(--muted);font-size:.78rem;position:relative;}
+    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:43%;height:1px;background:var(--border);}
+    .divider::before{left:0;} .divider::after{right:0;}
+    /* ── Social buttons ── */
+    .social-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
+    .btn-social{
+      width:100%;padding:11px 16px;border:1.5px solid var(--border);border-radius:10px;
+      background:var(--surface);cursor:pointer;font-size:.88rem;font-weight:600;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+      color:var(--text);transition:background .2s,border-color .2s;font-family:inherit;
+    }
+    .btn-social:hover{background:#f8faff;border-color:#cbd5e1;}
+    .btn-social:disabled{opacity:.6;cursor:not-allowed;}
+    .btn-social svg{width:18px;height:18px;flex-shrink:0;}
+    /* ── Messages ── */
+    .auth-msg{margin-top:12px;padding:11px 14px;border-radius:9px;font-size:.84rem;display:none;line-height:1.5;}
     .auth-msg.error{background:#fee2e2;color:#b91c1c;display:block;}
     .auth-msg.success{background:#dcfce7;color:#15803d;display:block;}
     .auth-msg.info{background:#dbeafe;color:#1d4ed8;display:block;}
-    .forgot-link{text-align:center;margin-top:14px;font-size:.82rem;}
+    /* ── Forgot link ── */
+    .forgot-link{text-align:center;margin-top:12px;font-size:.81rem;}
     .forgot-link a{color:var(--blue);text-decoration:none;font-weight:600;}
     .forgot-link a:hover{text-decoration:underline;}
-    .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;}
+    /* ── Spinner ── */
+    .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle;}
     @keyframes spin{to{transform:rotate(360deg)}}
-    .divider{text-align:center;margin:20px 0;color:var(--muted);font-size:.8rem;position:relative;}
-    .divider::before,.divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border);}
-    .divider::before{left:0;} .divider::after{right:0;}
-    .note{background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-size:.8rem;color:var(--muted);margin-top:16px;line-height:1.6;}
+    .spinner-dark{border:2px solid rgba(0,0,0,.15);border-top-color:var(--text);}
+    /* ── Note ── */
+    .note{background:#f8faff;border:1px solid var(--border);border-radius:8px;padding:11px 13px;font-size:.78rem;color:var(--muted);margin-top:14px;line-height:1.6;}
     .note strong{color:var(--text);}
+    /* ── Setup modal overlay ── */
+    .setup-overlay{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);
+      backdrop-filter:blur(4px);z-index:900;align-items:center;justify-content:center;
+    }
+    .setup-overlay.open{display:flex;}
+    .setup-card{
+      background:var(--surface);border-radius:20px;padding:36px 40px;
+      width:min(440px,95vw);box-shadow:0 24px 64px rgba(0,0,0,.3);
+      animation:popIn .25s ease;
+    }
+    @keyframes popIn{from{opacity:0;transform:scale(.93)}to{opacity:1;transform:scale(1)}}
+    .setup-card h2{font-size:1.2rem;font-weight:800;margin-bottom:6px;}
+    .setup-card p{color:var(--muted);font-size:.85rem;margin-bottom:22px;line-height:1.5;}
+    /* ── Verification screen ── */
+    .verify-screen{text-align:center;padding:10px 0;}
+    .verify-icon{font-size:3.5rem;margin-bottom:16px;}
+    .verify-title{font-size:1.3rem;font-weight:800;margin-bottom:8px;}
+    .verify-msg{color:var(--muted);font-size:.87rem;line-height:1.6;margin-bottom:20px;}
   </style>
 </head>
 <body>
-<div class="auth-card">
+
+<!-- ─── MAIN AUTH CARD ─── -->
+<div class="auth-card" id="authCard">
   <div class="auth-logo">
     <span class="auth-logo-icon">💊</span>
     <div>
@@ -52,96 +118,238 @@
     </div>
   </div>
 
-  <!-- Tab Row -->
+  <!-- Tab row -->
   <div class="tab-row">
-    <button class="tab active" id="tabLogin" onclick="showTab('login')">Sign In</button>
-    <button class="tab" id="tabSignup" onclick="showTab('signup')">Create Account</button>
+    <button class="tab active" id="tabLogin"  onclick="showTab('login')">Sign In</button>
+    <button class="tab"        id="tabSignup" onclick="showTab('signup')">Create Account</button>
   </div>
 
-  <!-- LOGIN FORM -->
+  <!-- ── LOGIN ── -->
   <div class="form-section active" id="secLogin">
+    <!-- Social buttons -->
+    <div class="social-btns">
+      <button class="btn-social" id="googleBtn" onclick="doOAuth('google')">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+      <button class="btn-social" id="facebookBtn" onclick="doOAuth('facebook')">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+        </svg>
+        Continue with Facebook
+      </button>
+    </div>
+    <div class="divider">OR</div>
+
     <div class="form-group">
       <label>Email Address</label>
       <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
     </div>
-    <div class="form-group">
+    <div class="form-group has-toggle">
       <label>Password</label>
       <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password"/>
+      <button class="toggle-pw" type="button" onclick="togglePw('loginPassword',this)" title="Show/hide password">👁</button>
     </div>
     <button class="btn-auth" id="loginBtn" onclick="doLogin()">Sign In</button>
     <div class="forgot-link"><a href="#" onclick="showTab('forgot')">Forgot password?</a></div>
     <div class="auth-msg" id="loginMsg"></div>
   </div>
 
-  <!-- SIGNUP FORM -->
+  <!-- ── SIGN UP ── -->
   <div class="form-section" id="secSignup">
     <div class="form-group">
-      <label>Pharmacy Name</label>
+      <label>Pharmacy Name *</label>
       <input type="text" id="signupPharmacy" placeholder="e.g. City Pharmacy"/>
     </div>
     <div class="form-group">
-      <label>Email Address</label>
+      <label>Email Address *</label>
       <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"/>
     </div>
-    <div class="form-group">
-      <label>Password (min 6 characters)</label>
+    <div class="form-group has-toggle">
+      <label>Password (min 6 characters) *</label>
       <input type="password" id="signupPassword" placeholder="Choose a strong password" autocomplete="new-password"/>
+      <button class="toggle-pw" type="button" onclick="togglePw('signupPassword',this)" title="Show/hide">👁</button>
     </div>
-    <div class="form-group">
-      <label>Confirm Password</label>
+    <div class="form-group has-toggle">
+      <label>Confirm Password *</label>
       <input type="password" id="signupConfirm" placeholder="Repeat password" autocomplete="new-password"/>
+      <button class="toggle-pw" type="button" onclick="togglePw('signupConfirm',this)" title="Show/hide">👁</button>
     </div>
     <button class="btn-auth" id="signupBtn" onclick="doSignup()">Create Account</button>
     <div class="auth-msg" id="signupMsg"></div>
-    <div class="note"><strong>Note:</strong> After signing up, check your email inbox and click the verification link before logging in.</div>
+    <div class="note"><strong>Note:</strong> After signing up, check your email inbox and click the verification link, then sign in.</div>
   </div>
 
-  <!-- FORGOT PASSWORD FORM -->
+  <!-- ── FORGOT PASSWORD ── -->
   <div class="form-section" id="secForgot">
-    <p style="color:var(--muted);font-size:.88rem;margin-bottom:20px">Enter your email and we will send you a password reset link.</p>
+    <p style="color:var(--muted);font-size:.87rem;margin-bottom:18px;line-height:1.5">Enter your registered email and we'll send a password reset link.</p>
     <div class="form-group">
       <label>Email Address</label>
       <input type="email" id="forgotEmail" placeholder="you@example.com"/>
     </div>
     <button class="btn-auth" id="forgotBtn" onclick="doForgot()">Send Reset Link</button>
-    <div class="forgot-link" style="margin-top:14px"><a href="#" onclick="showTab('login')">← Back to Sign In</a></div>
+    <div class="forgot-link" style="margin-top:12px"><a href="#" onclick="showTab('login')">← Back to Sign In</a></div>
     <div class="auth-msg" id="forgotMsg"></div>
+  </div>
+
+  <!-- ── VERIFICATION NOTICE ── -->
+  <div class="form-section" id="secVerify">
+    <div class="verify-screen">
+      <div class="verify-icon" id="verifyIcon">⏳</div>
+      <div class="verify-title" id="verifyTitle">Verifying…</div>
+      <div class="verify-msg"  id="verifyMsg">Please wait while we confirm your account.</div>
+      <button class="btn-auth" id="verifyBtn" style="display:none" onclick="showTab('login')">Go to Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PHARMACY SETUP MODAL (for first-time OAuth users) ─── -->
+<div class="setup-overlay" id="setupOverlay">
+  <div class="setup-card">
+    <div style="font-size:2rem;margin-bottom:12px">🏥</div>
+    <h2>Set Up Your Pharmacy</h2>
+    <p>You're signed in! Before you continue, enter your pharmacy name so we can personalise your dashboard.</p>
+    <div class="form-group">
+      <label>Pharmacy Name *</label>
+      <input type="text" id="setupPharmacyName" placeholder="e.g. ABC Pharmacy"/>
+    </div>
+    <button class="btn-auth" id="setupBtn" onclick="doSetupPharmacy()">Continue to Dashboard →</button>
+    <div class="auth-msg" id="setupMsg"></div>
   </div>
 </div>
 
 <script>
 'use strict';
 
-/* ---- Check if already logged in ---- */
-(async function() {
+const PROD_REDIRECT = 'https://esakkimuthu-237.github.io/Esakki_pr/auth.html';
+
+/* ── Handle auth state changes and redirects ── */
+(async function boot() {
+  // 1. Check if URL contains auth tokens (email verify / OAuth callback)
+  const hash   = window.location.hash;
+  const params = new URLSearchParams(window.location.search);
+  const isCallback = hash.includes('access_token') ||
+                     hash.includes('error') ||
+                     params.get('code') ||
+                     params.get('error');
+
+  if (isCallback) {
+    showTab('verify');
+    setVerifyState('loading', '⏳', 'Verifying…', 'Processing your authentication link…');
+
+    // Let Supabase process the callback hash/code automatically
+    await new Promise(r => setTimeout(r, 1000)); // brief wait for SDK to parse hash
+
+    const { data: { session }, error } = await SUPA.auth.getSession();
+
+    if (error || !session) {
+      const errMsg = params.get('error_description') || error?.message || 'Verification failed or link has expired.';
+      setVerifyState('error', '❌', 'Verification Failed', errMsg + ' Please request a new link.');
+      document.getElementById('verifyBtn').style.display = '';
+      return;
+    }
+
+    // Session valid — check if password-reset flow
+    const type = params.get('type') || new URLSearchParams(hash.slice(1)).get('type');
+    if (type === 'recovery') {
+      setVerifyState('success', '🔑', 'Reset Your Password', 'Your identity is confirmed. Please set a new password below.');
+      document.getElementById('verifyBtn').textContent = 'Set New Password';
+      document.getElementById('verifyBtn').style.display = '';
+      document.getElementById('verifyBtn').onclick = () => showTab('reset');
+      // Dynamically inject reset form if not present
+      showResetSection();
+      return;
+    }
+
+    // Email verification or OAuth login success
+    setVerifyState('success', '✅', 'Success!', 'Your account is verified. Taking you to your dashboard…');
+    await handlePostLogin(session.user);
+    return;
+  }
+
+  // 2. Not a callback — check if already logged in
   const { data: { session } } = await SUPA.auth.getSession();
-  if (session) window.location.href = 'index.html';
+  if (session) {
+    window.location.href = 'index.html';
+    return;
+  }
+  // 3. Not logged in — show normal auth card
 })();
 
-/* ---- Tab switching ---- */
-function showTab(tab) {
-  document.querySelectorAll('.tab,.form-section').forEach(el => el.classList.remove('active'));
-  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1))?.classList.add('active');
-  document.getElementById('sec' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+/* ── Listen for auth state changes (OAuth popup / tab) ── */
+SUPA.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session) {
+    await handlePostLogin(session.user);
+  }
+});
+
+/* ── Post-login handler — checks if pharmacy setup is needed ── */
+async function handlePostLogin(user) {
+  try {
+    const ph = await getOrCreatePharmacy(user);
+    if (ph._needs_setup) {
+      // OAuth first-timer — show setup modal
+      document.getElementById('setupOverlay').classList.add('open');
+      document.getElementById('setupPharmacyName').focus();
+    } else {
+      window.location.href = 'index.html';
+    }
+  } catch(e) {
+    window.location.href = 'index.html'; // fail-safe
+  }
 }
 
-/* ---- Sign In ---- */
+/* ── Pharmacy setup for first-time OAuth users ── */
+async function doSetupPharmacy() {
+  const nameInput = document.getElementById('setupPharmacyName');
+  const name = nameInput.value.trim();
+  const btn  = document.getElementById('setupBtn');
+  const msg  = document.getElementById('setupMsg');
+  if (!name) { showMsg(msg, 'error', 'Please enter your pharmacy name.'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Saving…';
+  try {
+    const { data: { user } } = await SUPA.auth.getUser();
+    // Update the pharmacy record
+    await SUPA.from('pharmacies').update({ name }).eq('user_id', user.id);
+    window.location.href = 'index.html';
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Continue to Dashboard →';
+    showMsg(msg, 'error', e.message);
+  }
+}
+
+/* ── Tab switching ── */
+function showTab(tab) {
+  document.querySelectorAll('.tab,.form-section').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab' + cap(tab))?.classList.add('active');
+  document.getElementById('sec' + cap(tab))?.classList.add('active');
+}
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+/* ── Sign In ── */
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pwd   = document.getElementById('loginPassword').value;
   const btn   = document.getElementById('loginBtn');
   const msg   = document.getElementById('loginMsg');
-  msg.className = 'auth-msg'; msg.textContent = '';
+  clearMsg(msg);
   if (!email || !pwd) { showMsg(msg,'error','Please fill in all fields.'); return; }
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Signing in…';
   const { data, error } = await SUPA.auth.signInWithPassword({ email, password: pwd });
-  btn.disabled = false; btn.innerHTML = 'Sign In';
+  btn.disabled = false; btn.textContent = 'Sign In';
   if (error) { showMsg(msg,'error', error.message); return; }
   window.location.href = 'index.html';
 }
 
-/* ---- Sign Up ---- */
+/* ── Sign Up ── */
 async function doSignup() {
   const phName = document.getElementById('signupPharmacy').value.trim();
   const email  = document.getElementById('signupEmail').value.trim();
@@ -149,49 +357,143 @@ async function doSignup() {
   const conf   = document.getElementById('signupConfirm').value;
   const btn    = document.getElementById('signupBtn');
   const msg    = document.getElementById('signupMsg');
-  msg.className = 'auth-msg'; msg.textContent = '';
-  if (!email || !pwd) { showMsg(msg,'error','Please fill in all fields.'); return; }
+  clearMsg(msg);
+  if (!phName) { showMsg(msg,'error','Please enter your pharmacy name.'); return; }
+  if (!email)  { showMsg(msg,'error','Please enter your email address.'); return; }
   if (pwd.length < 6) { showMsg(msg,'error','Password must be at least 6 characters.'); return; }
   if (pwd !== conf)   { showMsg(msg,'error','Passwords do not match.'); return; }
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Creating account…';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Creating account…';
   const { data, error } = await SUPA.auth.signUp({
-    email, password: pwd,
-    options: { data: { pharmacy_name: phName || 'My Pharmacy' } }
+    email,
+    password: pwd,
+    options: {
+      data: { pharmacy_name: phName },
+      // FIX: explicit redirect URL so verification email goes to production, not localhost
+      emailRedirectTo: PROD_REDIRECT
+    }
   });
-  btn.disabled = false; btn.innerHTML = 'Create Account';
+  btn.disabled = false; btn.textContent = 'Create Account';
   if (error) { showMsg(msg,'error', error.message); return; }
-  showMsg(msg,'success','Account created! Please check your email and click the verification link, then sign in.');
+  showMsg(msg,'success',
+    '✅ Account created! Check your email inbox and click the verification link, then sign in here.'
+  );
 }
 
-/* ---- Forgot Password ---- */
+/* ── Forgot Password ── */
 async function doForgot() {
   const email = document.getElementById('forgotEmail').value.trim();
   const btn   = document.getElementById('forgotBtn');
   const msg   = document.getElementById('forgotMsg');
-  msg.className = 'auth-msg'; msg.textContent = '';
+  clearMsg(msg);
   if (!email) { showMsg(msg,'error','Please enter your email address.'); return; }
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Sending…';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Sending…';
   const { error } = await SUPA.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/Esakki_pr/auth.html'
+    redirectTo: PROD_REDIRECT   // FIX: production URL instead of dynamic origin
   });
-  btn.disabled = false; btn.innerHTML = 'Send Reset Link';
+  btn.disabled = false; btn.textContent = 'Send Reset Link';
   if (error) { showMsg(msg,'error', error.message); return; }
-  showMsg(msg,'success','Reset link sent! Check your email inbox.');
+  showMsg(msg,'success','Reset link sent! Check your email inbox (including spam folder).');
 }
 
-/* ---- Enter key support ---- */
+/* ── OAuth (Google / Facebook) ── */
+async function doOAuth(provider) {
+  const btn = document.getElementById(provider + 'Btn');
+  btn.disabled = true;
+  const label = provider === 'google' ? 'Google' : 'Facebook';
+  btn.innerHTML = `<span class="spinner spinner-dark"></span>Opening ${label}…`;
+  const { error } = await SUPA.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: PROD_REDIRECT,
+      queryParams: provider === 'google'
+        ? { access_type: 'offline', prompt: 'select_account' }
+        : {}
+    }
+  });
+  if (error) {
+    btn.disabled = false;
+    btn.innerHTML = provider === 'google'
+      ? '<svg>...</svg> Continue with Google'
+      : '<svg>...</svg> Continue with Facebook';
+    showMsg(document.getElementById('loginMsg'), 'error',
+      `${label} sign-in failed: ${error.message}. Make sure ${label} is configured in Supabase.`
+    );
+  }
+  // If no error, browser is redirected to OAuth provider (no further JS needed)
+}
+
+/* ── Password visibility toggle ── */
+function togglePw(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
+  else                         { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+/* ── Verify state helper ── */
+function setVerifyState(state, icon, title, msg) {
+  document.getElementById('verifyIcon').textContent  = icon;
+  document.getElementById('verifyTitle').textContent = title;
+  document.getElementById('verifyMsg').textContent   = msg;
+}
+
+/* ── Password reset section (injected dynamically) ── */
+function showResetSection() {
+  // Add a reset tab + section if not already there
+  if (document.getElementById('secReset')) { showTab('reset'); return; }
+  const card = document.getElementById('authCard');
+  const sec  = document.createElement('div');
+  sec.className = 'form-section'; sec.id = 'secReset';
+  sec.innerHTML = `
+    <h3 style="margin-bottom:16px;font-weight:700">Set New Password</h3>
+    <div class="form-group has-toggle">
+      <label>New Password</label>
+      <input type="password" id="resetPwd" placeholder="Minimum 6 characters"/>
+      <button class="toggle-pw" type="button" onclick="togglePw('resetPwd',this)">👁</button>
+    </div>
+    <div class="form-group has-toggle">
+      <label>Confirm New Password</label>
+      <input type="password" id="resetConf" placeholder="Repeat new password"/>
+      <button class="toggle-pw" type="button" onclick="togglePw('resetConf',this)">👁</button>
+    </div>
+    <button class="btn-auth" id="resetBtn" onclick="doReset()">Update Password</button>
+    <div class="auth-msg" id="resetMsg"></div>
+  `;
+  card.appendChild(sec);
+  showTab('reset');
+}
+
+async function doReset() {
+  const pwd  = document.getElementById('resetPwd').value;
+  const conf = document.getElementById('resetConf').value;
+  const btn  = document.getElementById('resetBtn');
+  const msg  = document.getElementById('resetMsg');
+  clearMsg(msg);
+  if (pwd.length < 6) { showMsg(msg,'error','Password must be at least 6 characters.'); return; }
+  if (pwd !== conf)   { showMsg(msg,'error','Passwords do not match.'); return; }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Updating…';
+  const { error } = await SUPA.auth.updateUser({ password: pwd });
+  btn.disabled = false; btn.textContent = 'Update Password';
+  if (error) { showMsg(msg,'error', error.message); return; }
+  showMsg(msg,'success','Password updated! You can now sign in with your new password.');
+  await SUPA.auth.signOut();
+  setTimeout(() => showTab('login'), 2000);
+}
+
+/* ── Enter key support ── */
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  const active = document.querySelector('.form-section.active').id;
+  const active = document.querySelector('.form-section.active')?.id;
   if (active === 'secLogin')  doLogin();
   if (active === 'secSignup') doSignup();
   if (active === 'secForgot') doForgot();
+  if (active === 'secReset')  doReset();
 });
 
-function showMsg(el, type, text) {
-  el.className = 'auth-msg ' + type;
-  el.textContent = text;
-}
+/* ── Message helpers ── */
+function showMsg(el, type, text) { el.className = 'auth-msg ' + type; el.textContent = text; }
+function clearMsg(el) { el.className = 'auth-msg'; el.textContent = ''; }
 </script>
 </body>
 </html>

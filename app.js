@@ -14,10 +14,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const { user, pharmacy } = await DB.init();
     // Fill sidebar info
-    document.getElementById('sidebarPhName').textContent    = pharmacy.name || 'My Pharmacy';
+    const phName = pharmacy.name || 'My Pharmacy';
+    document.getElementById('sidebarPhName').textContent    = phName;
     document.getElementById('sidebarUserEmail').textContent = user.email;
     document.getElementById('todayDate').textContent =
       new Date().toLocaleDateString('en-IN', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+    // Update page title and sidebar logo dynamically with the pharmacy name
+    document.title = phName + ' – Pharmacy Management';
+    const _logoText = document.querySelector('.logo-text');
+    if (_logoText) _logoText.textContent = phName;
+    // Update dashboard greeting
+    const _greet = document.getElementById('dashGreet');
+    if (_greet) _greet.textContent = 'Welcome to ' + phName + '. Here is your pharmacy at a glance.';
 
     // Load suppliers into form dropdown
     await loadSupplierDropdown();
@@ -428,7 +436,11 @@ async function saveSettings() {
       gst_number:     document.getElementById('setPhGst').value.trim(),
       license_number: document.getElementById('setPhLicense').value.trim(),
     });
-    document.getElementById('sidebarPhName').textContent = document.getElementById('setPhName').value.trim() || 'My Pharmacy';
+    const _savedName = document.getElementById('setPhName').value.trim() || 'My Pharmacy';
+    document.getElementById('sidebarPhName').textContent = _savedName;
+    document.title = _savedName + ' – Pharmacy Management';
+    const _logoEl = document.querySelector('.logo-text');
+    if (_logoEl) _logoEl.textContent = _savedName;
     toast('Profile updated!', 'success');
   } catch(err) { toast('Error: ' + err.message, 'error'); }
 }

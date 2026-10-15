@@ -311,3 +311,21 @@ textarea { resize: vertical; }
   .form-card { padding: 16px; }
   .value-summary { grid-template-columns: 1fr; }
 }
+/* ══ AUTH PAGE – additional professional styles ══ */
+/* Password-reset page dynamic section */
+.form-section#secReset h3 { color: var(--text); font-size: 1rem; margin-bottom: 14px; }
+
+/* Improve topbar title on mobile */
+@media (max-width: 480px) {
+  .topbar-title { font-size: .95rem; }
+  .date-badge { display: none; }
+}
+
+/* Sidebar logo text overflow */
+.logo-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+
+/* Pharmacy name update smooth transition */
+#sidebarPhName { transition: opacity .3s; }
+
+/* Setup modal animation */
+@keyframes popIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
