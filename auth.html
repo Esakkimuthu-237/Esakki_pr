@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -272,13 +272,22 @@ const PROD_REDIRECT = 'https://esakkimuthu-237.github.io/Esakki_pr/auth.html';
     return;
   }
 
-  // 2. Not a callback — check if already logged in
+  // 2. Post-delete redirect — show "account deleted" message
+  if (params.get('deleted') === '1') {
+    showTab('login');
+    showMsg(document.getElementById('loginMsg'), 'success',
+      '✅ Your account and all data have been permanently deleted.');
+    history.replaceState(null, '', 'auth.html');
+    return;
+  }
+
+  // 3. Not a callback — check if already logged in
   const { data: { session } } = await SUPA.auth.getSession();
   if (session) {
     window.location.href = 'index.html';
     return;
   }
-  // 3. Not logged in — show normal auth card
+  // 4. Not logged in — show normal auth card
 })();
 
 /* ── Listen for auth state changes (OAuth popup / tab) ── */
