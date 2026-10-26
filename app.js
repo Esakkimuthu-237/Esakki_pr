@@ -67,6 +67,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const logoEl = document.getElementById('sidebarLogoText');
     if (logoEl) logoEl.textContent = phName;
 
+    /* Display name & avatar */
+    const displayName = localStorage.getItem('pharmacare_display_name') || user.email || 'User';
+    const subEl = document.getElementById('sidebarLogoSub');
+    if (subEl) subEl.textContent = displayName;
+    /* applyAvatar is defined below; defer so DOM is ready */
+    setTimeout(() => applyAvatar(displayName), 0);
+
     document.getElementById('todayDate').textContent =
       new Date().toLocaleDateString('en-IN',
         { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
@@ -878,3 +885,249 @@ window.closeUserMenu           = closeUserMenu;
 window.loadInvoices  = function() {};   // placeholder — overwritten by billing.js
 window.loadSuppliers = function() {};   // placeholder — overwritten by suppliers.js
 window.loadReports   = function() {};   // placeholder — overwritten by reports.js
+
+/* ════════════════════════════════════════════════════════════════
+   AVATAR / PROFILE  SYSTEM
+   - Avatar = uploaded photo (base64 in localStorage) OR initials
+   - Initials generated from display name or email
+   - Profile modal: display name, pharmacy name, avatar, password
+════════════════════════════════════════════════════════════════ */
+
+const AVATAR_KEY       = 'pharmacare_avatar_b64';   // localStorage key for base64 image
+const DISPLAY_NAME_KEY = 'pharmacare_display_name'; // user's display name
+
+/* ── Colour palette for initials avatars ── */
+const AVATAR_COLOURS = [
+  '#7c3aed','#2563eb','#0891b2','#059669',
+  '#d97706','#dc2626','#db2777','#7c3aed',
+];
+
+function avatarColour(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = str.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLOURS[Math.abs(h) % AVATAR_COLOURS.length];
+}
+
+function getInitials(name) {
+  const parts = (name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '?';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** Apply avatar to ALL avatar elements in the page */
+function applyAvatar(name) {
+  const b64     = localStorage.getItem(AVATAR_KEY) || '';
+  const initials = getInitials(name);
+  const colour  = avatarColour(name || '?');
+
+  // logo avatar (top of sidebar)
+  const logoImg      = document.getElementById('logoAvatarImg');
+  const logoIni      = document.getElementById('logoAvatarInitials');
+  const logoAvatar   = document.getElementById('sidebarAvatar');
+  // sidebar footer avatar
+  const sfImg        = document.getElementById('sfAvatarImg');
+  const sfIni        = document.getElementById('sfAvatarInitials');
+  const sfWrap       = document.getElementById('sfAvatar');
+
+  if (b64) {
+    if (logoImg) { logoImg.src = b64; logoImg.style.display = 'block'; }
+    if (logoIni) logoIni.style.display = 'none';
+    if (sfImg)   { sfImg.src = b64; sfImg.style.display = 'block'; }
+    if (sfIni)   sfIni.style.display = 'none';
+  } else {
+    if (logoImg) logoImg.style.display = 'none';
+    if (logoIni) { logoIni.textContent = initials; logoIni.style.display = ''; }
+    if (sfImg)   sfImg.style.display = 'none';
+    if (sfIni)   { sfIni.textContent  = initials; sfIni.style.display = ''; }
+  }
+
+  // set background colour (for initials mode, still nice in photo mode)
+  if (logoAvatar) logoAvatar.style.background = b64 ? 'transparent' : colour;
+  if (sfWrap)     sfWrap.style.background     = b64 ? 'transparent' : colour;
+
+  // also update profile modal preview if open
+  refreshProfilePreview(name, b64, colour, initials);
+}
+
+function refreshProfilePreview(name, b64, colour, initials) {
+  const pImg = document.getElementById('profileAvatarPreviewImg');
+  const pIni = document.getElementById('profileAvatarPreviewInitials');
+  const pPrev = document.getElementById('profileAvatarPreview');
+  if (!pPrev) return;
+  if (b64) {
+    if (pImg) { pImg.src = b64; pImg.style.display = 'block'; }
+    if (pIni) pIni.style.display = 'none';
+  } else {
+    if (pImg) pImg.style.display = 'none';
+    if (pIni) { pIni.textContent = initials || getInitials(name); pIni.style.display = ''; }
+    pPrev.style.background = colour || avatarColour(name || '?');
+  }
+  const removeBtn = document.getElementById('removeAvatarBtn');
+  if (removeBtn) removeBtn.style.display = b64 ? '' : 'none';
+}
+
+/* ── Profile Modal ── */
+let _pendingAvatarB64 = null;  // staged avatar before save
+
+function openProfileModal() {
+  const ph   = DB.pharmacy();
+  const user = DB._user();
+  const name = localStorage.getItem(DISPLAY_NAME_KEY) || (user && user.email) || '';
+
+  const el = id => document.getElementById(id);
+  el('profileDisplayName').value  = name;
+  el('profilePharmacyName').value = ph ? (ph.name || '') : '';
+  el('profileNewPw').value    = '';
+  el('profileConfirmPw').value = '';
+  const msg = el('profileMsg');
+  if (msg) { msg.className = 'auth-msg'; msg.textContent = ''; }
+
+  _pendingAvatarB64 = localStorage.getItem(AVATAR_KEY) || null;
+
+  const b64 = _pendingAvatarB64;
+  const col  = avatarColour(name);
+  const ini  = getInitials(name);
+  refreshProfilePreview(name, b64, col, ini);
+
+  el('profileModal').classList.add('open');
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('open');
+  _pendingAvatarB64 = null;
+}
+
+function handleAvatarFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) {
+    showProfileMsg('Image must be under 2 MB.', 'error'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    _pendingAvatarB64 = e.target.result;
+    const pImg  = document.getElementById('profileAvatarPreviewImg');
+    const pIni  = document.getElementById('profileAvatarPreviewInitials');
+    const pPrev = document.getElementById('profileAvatarPreview');
+    if (pImg)  { pImg.src = _pendingAvatarB64; pImg.style.display = 'block'; }
+    if (pIni)  pIni.style.display = 'none';
+    if (pPrev) pPrev.style.background = 'transparent';
+    const rb = document.getElementById('removeAvatarBtn');
+    if (rb) rb.style.display = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAvatar() {
+  _pendingAvatarB64 = null;
+  const name  = document.getElementById('profileDisplayName').value.trim();
+  const pImg  = document.getElementById('profileAvatarPreviewImg');
+  const pIni  = document.getElementById('profileAvatarPreviewInitials');
+  const pPrev = document.getElementById('profileAvatarPreview');
+  if (pImg)  pImg.style.display = 'none';
+  if (pIni)  { pIni.textContent = getInitials(name); pIni.style.display = ''; }
+  if (pPrev) pPrev.style.background = avatarColour(name);
+  const rb = document.getElementById('removeAvatarBtn');
+  if (rb) rb.style.display = 'none';
+  // reset file input
+  const fi = document.getElementById('avatarFileInput');
+  if (fi) fi.value = '';
+}
+
+async function saveProfile() {
+  const btn  = document.getElementById('saveProfileBtn');
+  const msg  = document.getElementById('profileMsg');
+  const displayName = document.getElementById('profileDisplayName').value.trim();
+  const phName      = document.getElementById('profilePharmacyName').value.trim() || 'My Pharmacy';
+  const newPw       = document.getElementById('profileNewPw').value;
+  const confPw      = document.getElementById('profileConfirmPw').value;
+
+  if (!displayName) { showProfileMsg('Display name cannot be empty.', 'error'); return; }
+
+  if (newPw) {
+    if (newPw.length < 8) { showProfileMsg('Password must be at least 8 characters.', 'error'); return; }
+    if (newPw !== confPw)  { showProfileMsg('Passwords do not match.', 'error'); return; }
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-sm"></span>Saving…';
+
+  try {
+    /* 1. Save display name to localStorage */
+    localStorage.setItem(DISPLAY_NAME_KEY, displayName);
+
+    /* 2. Save avatar */
+    if (_pendingAvatarB64) {
+      localStorage.setItem(AVATAR_KEY, _pendingAvatarB64);
+    } else if (_pendingAvatarB64 === null && !localStorage.getItem(AVATAR_KEY)) {
+      // already no avatar, nothing to do
+    } else if (_pendingAvatarB64 === null) {
+      localStorage.removeItem(AVATAR_KEY);
+    }
+
+    /* 3. Save pharmacy name to Supabase */
+    await DB.updatePharmacy({ name: phName });
+
+    /* 4. Optionally change password */
+    if (newPw) {
+      const { error } = await SUPA.auth.updateUser({ password: newPw });
+      if (error) throw error;
+    }
+
+    /* 5. Update all UI elements live */
+    applyAvatar(displayName);
+    document.getElementById('sidebarPhName').textContent = phName;
+    const logoEl = document.getElementById('sidebarLogoText');
+    if (logoEl) logoEl.textContent = phName;
+    const subEl = document.getElementById('sidebarLogoSub');
+    if (subEl) subEl.textContent = displayName;
+    document.title = phName + ' – Pharmacy Management';
+    const greet = document.getElementById('dashGreet');
+    if (greet) greet.textContent = 'Welcome back, ' + phName + '!';
+
+    showProfileMsg('Profile saved successfully! ✅', 'success');
+    setTimeout(closeProfileModal, 1200);
+  } catch(err) {
+    showProfileMsg('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Save Changes';
+  }
+}
+
+function showProfileMsg(text, type) {
+  const el = document.getElementById('profileMsg');
+  if (!el) return;
+  el.className = 'auth-msg ' + type;
+  el.textContent = text;
+}
+
+function togglePw(inputId, btn) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const show = el.type === 'password';
+  el.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+}
+
+/* ── User menu toggle (footer avatar click) ── */
+function toggleUserMenu(e) {
+  e.stopPropagation();
+  document.getElementById('userMenuDropdown').classList.toggle('open');
+}
+
+/* ── Close profile modal on backdrop click ── */
+document.getElementById('profileModal').addEventListener('click', e => {
+  if (e.target.id === 'profileModal') closeProfileModal();
+});
+
+/* ── Expose ── */
+window.openProfileModal  = openProfileModal;
+window.closeProfileModal = closeProfileModal;
+window.handleAvatarFile  = handleAvatarFile;
+window.removeAvatar      = removeAvatar;
+window.saveProfile       = saveProfile;
+window.togglePw          = togglePw;
+window.toggleUserMenu    = toggleUserMenu;
+window.applyAvatar       = applyAvatar;

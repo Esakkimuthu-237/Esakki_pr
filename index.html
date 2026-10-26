@@ -16,8 +16,14 @@
   <button class="sidebar-collapse-btn" id="collapseBtn" title="Collapse sidebar" aria-label="Toggle sidebar">◀</button>
 
   <div class="sidebar-logo">
-    <span class="logo-icon">💊</span>
-    <span class="logo-text" id="sidebarLogoText">My Pharmacy</span>
+    <div class="logo-avatar" id="sidebarAvatar" onclick="openProfileModal()" title="Edit profile">
+      <img id="logoAvatarImg" src="" alt="" style="display:none"/>
+      <span id="logoAvatarInitials">?</span>
+    </div>
+    <div class="logo-text-wrap">
+      <span class="logo-text" id="sidebarLogoText">My Pharmacy</span>
+      <span class="logo-sub" id="sidebarLogoSub"></span>
+    </div>
   </div>
   <nav class="sidebar-nav">
     <a href="#" class="nav-item active" data-page="dashboard"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
@@ -31,20 +37,24 @@
     <a href="#" class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
   </nav>
   <div class="sidebar-footer">
-    <span class="ph-icon">🏥</span>
-    <div class="ph-details">
-      <div class="ph-name" id="sidebarPhName">Loading…</div>
-      <div class="ph-sub" id="sidebarUserEmail"></div>
-    </div>
-    <!-- User menu -->
-    <div class="user-menu-wrap" id="userMenuWrap">
-      <button class="btn-logout" id="userMenuBtn" aria-label="User menu" title="User menu">⏻</button>
-      <div class="user-menu-dropdown" id="userMenuDropdown">
-        <a href="#" onclick="navigateTo('settings');closeUserMenu();return false;" class="user-menu-item">⚙️ Settings</a>
-        <div class="user-menu-divider"></div>
-        <a href="#" onclick="doLogout();return false;" class="user-menu-item">🚪 Log Out</a>
-        <a href="#" onclick="openDeleteAccountModal();return false;" class="user-menu-item user-menu-danger">🗑 Delete Account</a>
+    <div class="sf-avatar-wrap" id="sfAvatarWrap" onclick="toggleUserMenu(event)" title="User menu">
+      <div class="sf-avatar" id="sfAvatar">
+        <img id="sfAvatarImg" src="" alt="" style="display:none"/>
+        <span id="sfAvatarInitials">?</span>
       </div>
+      <div class="ph-details">
+        <div class="ph-name" id="sidebarPhName">Loading…</div>
+        <div class="ph-sub" id="sidebarUserEmail"></div>
+      </div>
+      <span class="sf-chevron">⌄</span>
+    </div>
+    <!-- User menu dropdown -->
+    <div class="user-menu-dropdown" id="userMenuDropdown">
+      <a href="#" onclick="openProfileModal();closeUserMenu();return false;" class="user-menu-item">👤 Edit Profile</a>
+      <a href="#" onclick="navigateTo('settings');closeUserMenu();return false;" class="user-menu-item">⚙️ Settings</a>
+      <div class="user-menu-divider"></div>
+      <a href="#" onclick="doLogout();return false;" class="user-menu-item user-menu-danger">🚪 Log Out</a>
+      <a href="#" onclick="openDeleteAccountModal();return false;" class="user-menu-item user-menu-danger">🗑 Delete Account</a>
     </div>
   </div>
 </aside>
@@ -365,15 +375,78 @@
     <!-- DANGER ZONE -->
     <div class="form-card danger-zone" style="max-width:600px;margin-top:24px">
       <div class="form-card-title" style="color:#dc2626">⚠️ Danger Zone</div>
-      <p style="color:var(--muted);font-size:.88rem;margin-bottom:18px;line-height:1.6">These actions are permanent and cannot be undone.</p>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:18px;line-height:1.6">This action is permanent and cannot be undone. To log out, use the user menu at the bottom of the sidebar.</p>
       <div class="form-actions" style="justify-content:flex-start;gap:12px;margin-top:0">
-        <button class="btn-secondary" onclick="doLogout()">🚪 Log Out</button>
         <button class="btn-danger" onclick="openDeleteAccountModal()">🗑 Delete My Account</button>
       </div>
     </div>
   </section>
 
 </div><!-- end main-wrapper -->
+
+
+<!-- MODAL: Profile Edit -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-header">
+      <h2>👤 Edit Profile</h2>
+      <button class="modal-close" onclick="closeProfileModal()" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Avatar Upload -->
+      <div class="profile-avatar-section">
+        <div class="profile-avatar-preview" id="profileAvatarPreview" onclick="document.getElementById('avatarFileInput').click()" title="Click to change photo">
+          <img id="profileAvatarPreviewImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
+          <span id="profileAvatarPreviewInitials" style="font-size:2.2rem;font-weight:800;color:#fff"></span>
+          <div class="profile-avatar-overlay">📷<br><small>Change</small></div>
+        </div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none" onchange="handleAvatarFile(event)"/>
+        <div class="profile-avatar-actions">
+          <button class="btn-secondary btn-sm" onclick="document.getElementById('avatarFileInput').click()">📷 Upload Photo</button>
+          <button class="btn-secondary btn-sm" id="removeAvatarBtn" onclick="removeAvatar()" style="display:none">✕ Remove</button>
+        </div>
+        <p style="color:var(--muted);font-size:.76rem;text-align:center;margin-top:6px">JPG/PNG, max 2 MB. Or we'll use your initials.</p>
+      </div>
+
+      <!-- Name fields -->
+      <div class="form-grid" style="margin-top:20px">
+        <div class="form-group span-2">
+          <label>Display Name</label>
+          <input type="text" id="profileDisplayName" placeholder="Your name"/>
+        </div>
+        <div class="form-group span-2">
+          <label>Pharmacy Name</label>
+          <input type="text" id="profilePharmacyName" placeholder="Pharmacy name"/>
+        </div>
+      </div>
+
+      <!-- Password change -->
+      <div style="border-top:1px solid var(--border);margin:18px 0 14px"></div>
+      <div class="form-card-title" style="font-size:.9rem;padding:0;border:none;margin-bottom:10px">🔑 Change Password <span style="font-size:.75rem;font-weight:400;color:var(--muted)">(leave blank to keep current)</span></div>
+      <div class="form-grid">
+        <div class="form-group span-2">
+          <label>New Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="profileNewPw" placeholder="New password (min 8 chars)" autocomplete="new-password"/>
+            <button class="pw-toggle" type="button" onclick="togglePw('profileNewPw',this)">👁</button>
+          </div>
+        </div>
+        <div class="form-group span-2">
+          <label>Confirm New Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="profileConfirmPw" placeholder="Repeat new password" autocomplete="new-password"/>
+            <button class="pw-toggle" type="button" onclick="togglePw('profileConfirmPw',this)">👁</button>
+          </div>
+        </div>
+      </div>
+      <div class="auth-msg" id="profileMsg"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeProfileModal()">Cancel</button>
+      <button class="btn-primary" id="saveProfileBtn" onclick="saveProfile()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
 
 <!-- MODAL: View / Edit Medicine -->
 <div class="modal-overlay" id="modalOverlay">
