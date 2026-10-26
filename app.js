@@ -184,6 +184,7 @@ function navigateTo(pageKey) {
   if (pageKey === 'dashboard') renderDashboard();
   if (pageKey === 'stock')     renderStock();
   if (pageKey === 'alerts')    renderAlerts();
+  if (pageKey === 'billing')   { if (typeof loadBillingMedicines === 'function') loadBillingMedicines(); }
   if (pageKey === 'invoices')  loadInvoices();
   if (pageKey === 'suppliers') loadSuppliers();
   if (pageKey === 'reports')   loadReports();

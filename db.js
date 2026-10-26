@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    db.js  –  Database layer
    All Supabase calls are here. app.js calls these functions.
    This keeps the code organized: UI logic in app.js, DB in db.js
@@ -182,7 +182,8 @@ async function dbSaveInvoice(invoiceData, items) {
       customer_name:  invoiceData.customerName || null,
       customer_phone: invoiceData.customerPhone || null,
       subtotal:       invoiceData.subtotal,
-      total_discount: invoiceData.totalDiscount,
+      // Accept either key name (totalDiscount or totalDisc) for compatibility
+      total_discount: invoiceData.totalDiscount ?? invoiceData.totalDisc ?? 0,
       total_gst:      invoiceData.totalGst,
       grand_total:    invoiceData.grandTotal,
       amount_paid:    invoiceData.amountPaid,

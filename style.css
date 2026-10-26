@@ -1,4 +1,4 @@
-﻿/* ===========================
+/* ===========================
    PharmaCare – style.css  (v3 — Dark Mode + Charts + Professional UI)
    =========================== */
 
@@ -509,3 +509,88 @@ textarea { resize: vertical; }
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ══ BILLING POS UPGRADE ══ */
+/* Search wrap with refresh button */
+.bill-search-wrap {
+  position: relative; display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.bill-search-wrap .search-icon {
+  position: absolute; left: 13px; font-size: 1rem; pointer-events: none; z-index: 1;
+}
+.bill-search-input {
+  padding-left: 40px !important; flex: 1;
+  font-size: 1rem !important; padding: 12px 14px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(14,165,233,.1) !important;
+}
+.bill-search-input:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,.18) !important;
+}
+.btn-sm { padding: 9px 14px !important; font-size: .82rem !important; white-space: nowrap; flex-shrink: 0; }
+
+/* Dropdown medicine cards */
+.sd-item {
+  padding: 12px 16px; cursor: pointer;
+  border-bottom: 1px solid var(--border); transition: background .15s;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sd-item:last-child { border-bottom: none; }
+.sd-item:hover { background: rgba(14,165,233,.06); }
+.sd-item.sd-disabled { opacity: .5; cursor: not-allowed; pointer-events: none; }
+.sd-item-main { display: flex; flex-direction: column; gap: 2px; }
+.sd-item-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .76rem; color: var(--muted); margin-top: 3px; }
+.sd-name { font-weight: 700; font-size: .9rem; color: var(--text); }
+.sd-brand { font-weight: 400; color: var(--muted); font-size: .82rem; }
+.sd-generic { font-size: .78rem; color: var(--muted); }
+.sd-price { font-weight: 700; color: var(--accent); font-size: .82rem; }
+.sd-badge { padding: 2px 8px; border-radius: 99px; font-size: .72rem; font-weight: 700; }
+.sd-badge.in  { background: #dcfce7; color: #15803d; }
+.sd-badge.out { background: #fee2e2; color: #b91c1c; }
+.sd-empty { padding: 20px; text-align: center; color: var(--muted); font-size: .88rem; }
+
+/* Live preview in add form */
+.add-preview-total {
+  background: rgba(14,165,233,.08); border-radius: 8px;
+  padding: 8px 14px; margin-top: 8px;
+  font-size: .86rem; font-weight: 600; color: var(--primary);
+  min-height: 34px;
+}
+
+/* Cart rows */
+.cart-table { font-size: .85rem; }
+.cart-row:hover { background: rgba(14,165,233,.04) !important; }
+.cart-med-name { font-weight: 700; color: var(--text); }
+.batch-code { font-family: monospace; font-size: .78rem; background: var(--bg); padding: 2px 6px; border-radius: 5px; }
+.cart-expiry { font-size: .72rem; color: var(--muted); margin-top: 2px; }
+.cart-empty-state { padding: 32px; text-align: center; color: var(--muted); font-size: .95rem; }
+
+/* Quantity control +/- buttons */
+.qty-ctrl { display: flex; align-items: center; gap: 4px; }
+.qty-btn {
+  width: 26px; height: 26px; border-radius: 6px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; font-size: .95rem; font-weight: 700; color: var(--text);
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+}
+.qty-btn:hover { border-color: var(--primary); color: var(--primary); background: rgba(14,165,233,.08); }
+.qty-input { width: 50px !important; text-align: center; padding: 4px 6px !important; font-size: .83rem !important; border-radius: 6px !important; }
+
+/* Remove button in cart */
+.btn-remove {
+  background: none; border: none; cursor: pointer; font-size: .9rem; color: var(--red);
+  padding: 4px 7px; border-radius: 6px; font-weight: 700;
+  transition: background .15s;
+}
+.btn-remove:hover { background: #fee2e2; }
+
+/* Bill summary improvements */
+.bs-row.text-red span { color: var(--red); }
+.bs-row.text-muted span { color: var(--muted); }
+
+/* surface-alt for readonly fields */
+.form-group input[readonly] { background: var(--bg) !important; color: var(--muted); cursor: not-allowed; }
+[data-theme="dark"] .form-group input[readonly] { background: #162032 !important; }

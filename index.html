@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"/>
@@ -175,67 +175,121 @@
 
   <!-- ═══ BILLING ═══ -->
   <section class="page" id="page-billing">
-    <div class="page-header"><h1>New Bill</h1><p>Search medicines, add to cart, and generate an invoice.</p></div>
+    <div class="page-header">
+      <h1>New Bill</h1>
+      <p>Search medicines, add to cart, and generate a GST invoice.</p>
+    </div>
     <div class="billing-layout">
       <!-- LEFT: Search + Cart -->
       <div class="billing-left">
-        <div class="form-card" style="margin-bottom:20px">
+
+        <!-- Customer Info -->
+        <div class="form-card" style="margin-bottom:16px">
           <div class="form-card-title">👤 Customer (Optional)</div>
           <div class="form-grid">
             <div class="form-group"><label>Customer Name</label><input type="text" id="bCustName" placeholder="Walk-in customer"/></div>
             <div class="form-group"><label>Phone</label><input type="text" id="bCustPhone" placeholder="Mobile number"/></div>
           </div>
         </div>
-        <div class="form-card">
-          <div class="form-card-title">🔍 Add Medicine to Cart</div>
-          <div class="search-wrap" style="margin-bottom:14px"><span class="search-icon">🔍</span><input type="text" id="billSearch" placeholder="Type medicine name to search…" autocomplete="off" aria-label="Search medicine for billing"/></div>
+
+        <!-- Medicine Search -->
+        <div class="form-card" style="margin-bottom:16px">
+          <div class="form-card-title">🔍 Search &amp; Add Medicine</div>
+          <div class="bill-search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="billSearch"
+              placeholder="Type medicine name, brand or barcode…"
+              autocomplete="off" aria-label="Search medicine for billing"
+              class="bill-search-input"/>
+            <button class="btn-secondary btn-sm" onclick="loadBillingMedicines()" title="Refresh stock">↺ Refresh</button>
+          </div>
           <div id="billSearchResults" class="search-dropdown"></div>
-          <!-- Selected item form -->
+
+          <!-- Add-item mini form -->
           <div id="addItemForm" style="display:none" class="add-item-form">
             <div class="selected-med-name" id="selMedName"></div>
             <div class="form-grid" style="margin-top:12px">
-              <div class="form-group"><label>Batch (Expiry)</label><select id="selBatch"></select></div>
+              <div class="form-group"><label>Batch (Expiry | Stock)</label><select id="selBatch"></select></div>
               <div class="form-group"><label>Qty *</label><input type="number" id="selQty" value="1" min="1"/></div>
-              <div class="form-group"><label>Unit Price ₹</label><input type="number" id="selPrice" step="0.01" min="0"/></div>
-              <div class="form-group"><label>Discount %</label><input type="number" id="selDisc" value="0" min="0" max="100"/></div>
+              <div class="form-group"><label>Unit Price ₹ (MRP)</label><input type="number" id="selPrice" step="0.01" min="0" readonly style="background:var(--surface-alt)"/></div>
+              <div class="form-group"><label>Discount %</label><input type="number" id="selDisc" value="0" min="0" max="100" step="0.5"/></div>
             </div>
+            <div id="addPreviewTotal" class="add-preview-total"></div>
             <div class="form-actions" style="margin-top:12px">
-              <button class="btn-secondary" onclick="cancelAddItem()">Cancel</button>
+              <button class="btn-secondary" onclick="cancelAddItem()">✕ Cancel</button>
               <button class="btn-primary" onclick="addToCart()">➕ Add to Cart</button>
             </div>
           </div>
         </div>
-        <!-- Cart -->
-        <div class="form-card" style="margin-top:20px">
-          <div class="form-card-title">🛒 Cart</div>
+
+        <!-- Cart Table -->
+        <div class="form-card">
+          <div class="form-card-title">🛒 Cart
+            <span id="cartCount" style="font-size:.8rem;font-weight:400;color:var(--muted)"></span>
+          </div>
           <div class="table-wrapper">
-            <table class="data-table" id="cartTable">
-              <thead><tr><th>Medicine</th><th>Batch</th><th>Qty</th><th>Price</th><th>Disc%</th><th>GST%</th><th>Total</th><th></th></tr></thead>
-              <tbody id="cartTbody"><tr><td colspan="8" class="empty-row">Cart is empty. Search a medicine above.</td></tr></tbody>
+            <table class="data-table cart-table" id="cartTable">
+              <thead><tr>
+                <th>Medicine</th>
+                <th>Batch / Expiry</th>
+                <th style="text-align:center">Qty</th>
+                <th>MRP ₹</th>
+                <th>Disc%</th>
+                <th>GST%</th>
+                <th>Total ₹</th>
+                <th></th>
+              </tr></thead>
+              <tbody id="cartTbody">
+                <tr><td colspan="8" class="empty-row">Cart is empty. Search a medicine above.</td></tr>
+              </tbody>
             </table>
           </div>
         </div>
-      </div>
-      <!-- RIGHT: Summary -->
+
+      </div><!-- end billing-left -->
+
+      <!-- RIGHT: Summary + Actions -->
       <div class="billing-right">
         <div class="form-card bill-summary-card">
           <div class="form-card-title">📄 Bill Summary</div>
           <div class="bill-summary-rows">
-            <div class="bs-row"><span>Subtotal</span><span id="bsSubtotal">₹0.00</span></div>
-            <div class="bs-row"><span>Discount</span><span id="bsDiscount" class="text-red">-₹0.00</span></div>
-            <div class="bs-row"><span>GST</span><span id="bsGst">+₹0.00</span></div>
+            <div class="bs-row"><span>Subtotal (MRP)</span><span id="bsSubtotal">₹0.00</span></div>
+            <div class="bs-row text-red"><span>Discount</span><span id="bsDiscount">-₹0.00</span></div>
+            <div class="bs-row text-muted"><span>Taxable Amount</span><span id="bsTaxable">₹0.00</span></div>
+            <div class="bs-row"><span>GST (incl.)</span><span id="bsGst">+₹0.00</span></div>
             <div class="bs-row grand"><span>Grand Total</span><span id="bsGrand">₹0.00</span></div>
           </div>
-          <div class="form-group" style="margin-top:18px"><label>Payment Method</label>
-            <select id="bPayment"><option value="cash">💵 Cash</option><option value="upi">📱 UPI</option><option value="card">💳 Card</option><option value="credit">📒 Credit</option></select>
+          <div style="border-top:1px dashed var(--border);margin:14px 0"></div>
+          <div class="form-group"><label>Payment Method</label>
+            <select id="bPayment">
+              <option value="cash">💵 Cash</option>
+              <option value="upi">📱 UPI</option>
+              <option value="card">💳 Card</option>
+              <option value="credit">📒 Credit</option>
+            </select>
           </div>
-          <div class="form-group"><label>Amount Paid (₹)</label><input type="number" id="bAmountPaid" placeholder="0.00" step="0.01" min="0"/></div>
-          <div class="form-group"><label>Notes</label><input type="text" id="bNotes" placeholder="Optional…"/></div>
-          <button class="btn-primary" style="width:100%;margin-top:10px;justify-content:center" onclick="saveBill()">💾 Save &amp; Print Bill</button>
-          <button class="btn-secondary" style="width:100%;margin-top:8px;justify-content:center" onclick="clearCart()">🗑 Clear Cart</button>
+          <div class="form-group">
+            <label>Amount Paid (₹)</label>
+            <input type="number" id="bAmountPaid" placeholder="0.00" step="0.01" min="0"/>
+          </div>
+          <div class="bs-row" style="margin-top:6px">
+            <span style="font-weight:600">Change</span>
+            <span id="bsChange" style="color:var(--accent);font-weight:700">—</span>
+          </div>
+          <div class="form-group" style="margin-top:10px">
+            <label>Notes</label>
+            <input type="text" id="bNotes" placeholder="Optional…"/>
+          </div>
+          <button id="saveBillBtn" class="btn-primary"
+            style="width:100%;margin-top:14px;justify-content:center"
+            onclick="saveBill()">💾 Generate Bill</button>
+          <button class="btn-secondary"
+            style="width:100%;margin-top:8px;justify-content:center"
+            onclick="clearCart()">🗑 Clear Cart</button>
         </div>
       </div>
-    </div>
+
+    </div><!-- end billing-layout -->
   </section>
 
   <!-- ═══ INVOICES ═══ -->
