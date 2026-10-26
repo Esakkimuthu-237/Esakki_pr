@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
    USER MENU
 ════════════════════════════════════════════════════════════════ */
 function closeUserMenu() {
-  document.getElementById('userMenuDropdown')?.classList.remove('open');
+  // no-op — dropdown removed; logout button is always visible
 }
 
 /** Logout — clears session and replaces history so Back does not return here. */
@@ -798,6 +798,8 @@ function loadSettings() {
   document.getElementById('setPhEmail').value   = ph.email          || '';
   document.getElementById('setPhGst').value     = ph.gst_number     || '';
   document.getElementById('setPhLicense').value = ph.license_number || '';
+  /* Sync profile picture panel */
+  _syncSettingsPfp();
 }
 
 async function saveSettings() {
@@ -1112,10 +1114,7 @@ function togglePw(inputId, btn) {
 }
 
 /* ── User menu toggle (footer avatar click) ── */
-function toggleUserMenu(e) {
-  e.stopPropagation();
-  document.getElementById('userMenuDropdown').classList.toggle('open');
-}
+// toggleUserMenu removed — dedicated logout button is now always visible in sidebar
 
 /* ── Close profile modal on backdrop click ── */
 document.getElementById('profileModal').addEventListener('click', e => {
@@ -1131,3 +1130,110 @@ window.saveProfile       = saveProfile;
 window.togglePw          = togglePw;
 window.toggleUserMenu    = toggleUserMenu;
 window.applyAvatar       = applyAvatar;
+
+/* ════════════════════════════════════════════════════════════════
+   SETTINGS — Profile Picture helpers
+   Avatar stored as base64 in localStorage (AVATAR_KEY defined in
+   the avatar system block above). No separate upload needed.
+════════════════════════════════════════════════════════════════ */
+
+/** Sync the Settings page pfp panel with the stored avatar */
+function _syncSettingsPfp() {
+  const b64      = localStorage.getItem('pharmacare_avatar_b64') || '';
+  const dispName = localStorage.getItem('pharmacare_display_name') || '';
+  const ph       = DB.pharmacy();
+  const name     = dispName || (ph && ph.name) || 'User';
+
+  const img    = document.getElementById('settingsPfpImg');
+  const ini    = document.getElementById('settingsPfpInitials');
+  const circle = document.getElementById('settingsPfpCircle');
+  const rmBtn  = document.getElementById('settingsPfpRemoveBtn');
+  if (!circle) return;
+
+  if (b64) {
+    if (img) { img.src = b64; img.style.display = 'block'; }
+    if (ini) ini.style.display = 'none';
+    circle.style.background = 'transparent';
+    if (rmBtn) rmBtn.style.display = '';
+  } else {
+    if (img) img.style.display = 'none';
+    if (ini) { ini.textContent = getInitials(name); ini.style.display = ''; }
+    circle.style.background = avatarColour(name);
+    if (rmBtn) rmBtn.style.display = 'none';
+  }
+}
+
+/**
+ * Handle file selection from the Settings pfp input.
+ * Validates size/type, converts to base64, saves, refreshes all avatars.
+ */
+async function settingsUploadPfp(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  /* Validate */
+  const allowed = ['image/jpeg','image/png','image/webp'];
+  if (!allowed.includes(file.type)) {
+    toast('Only JPG, PNG or WebP images are accepted.', 'error'); return;
+  }
+  if (file.size > 2 * 1024 * 1024) {
+    toast('Image must be under 2 MB.', 'error'); return;
+  }
+
+  /* Read as base64 */
+  const reader = new FileReader();
+  reader.onload = e => {
+    const b64 = e.target.result;
+    try {
+      localStorage.setItem('pharmacare_avatar_b64', b64);
+    } catch(_) {
+      toast('Storage full — try a smaller image.', 'error'); return;
+    }
+    const dispName = localStorage.getItem('pharmacare_display_name') || '';
+    applyAvatar(dispName);   // refresh sidebar + logo avatars
+    _syncSettingsPfp();       // refresh settings panel
+    toast('Profile picture updated!', 'success');
+  };
+  reader.readAsDataURL(file);
+
+  /* Reset input so the same file can be re-selected if needed */
+  event.target.value = '';
+}
+
+/** Remove photo — fall back to initials */
+function settingsRemovePfp() {
+  localStorage.removeItem('pharmacare_avatar_b64');
+  const dispName = localStorage.getItem('pharmacare_display_name') || '';
+  applyAvatar(dispName);
+  _syncSettingsPfp();
+  toast('Profile picture removed.', 'info');
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ACCOUNT — Add Another Account
+   Saves current session flag, then redirects to auth.html
+   with ?mode=add so auth.html knows not to clobber existing data.
+════════════════════════════════════════════════════════════════ */
+function doAddAnotherAccount() {
+  /* Sign out first so Supabase allows a fresh login;
+     the existing pharmacy data is already scoped by pharmacy_id
+     in the DB and stays safe — only the auth session changes. */
+  if (!confirm(
+    'You will be signed out and taken to the login page to sign in\n' +
+    'with a different account.\n\n' +
+    'Your current pharmacy data will NOT be deleted.\n\n' +
+    'Continue?'
+  )) return;
+  SUPA.auth.signOut().then(() => {
+    history.replaceState(null, '', 'auth.html?mode=add');
+    window.location.href = 'auth.html?mode=add';
+  }).catch(() => {
+    history.replaceState(null, '', 'auth.html?mode=add');
+    window.location.href = 'auth.html?mode=add';
+  });
+}
+
+/* Expose */
+window.settingsUploadPfp   = settingsUploadPfp;
+window.settingsRemovePfp   = settingsRemovePfp;
+window.doAddAnotherAccount = doAddAnotherAccount;

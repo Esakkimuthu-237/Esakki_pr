@@ -37,25 +37,26 @@
     <a href="#" class="nav-item" data-page="settings"><span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></a>
   </nav>
   <div class="sidebar-footer">
-    <div class="sf-avatar-wrap" id="sfAvatarWrap" onclick="toggleUserMenu(event)" title="User menu">
-      <div class="sf-avatar" id="sfAvatar">
-        <img id="sfAvatarImg" src="" alt="" style="display:none"/>
-        <span id="sfAvatarInitials">?</span>
-      </div>
-      <div class="ph-details">
-        <div class="ph-name" id="sidebarPhName">Loading…</div>
-        <div class="ph-sub" id="sidebarUserEmail"></div>
-      </div>
-      <span class="sf-chevron">⌄</span>
+    <!-- Avatar (click to edit profile pic) -->
+    <button class="sf-avatar" id="sfAvatar" onclick="openProfileModal()" title="Edit profile picture">
+      <img id="sfAvatarImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:9px"/>
+      <span id="sfAvatarInitials">?</span>
+    </button>
+    <!-- Name + email -->
+    <div class="ph-details">
+      <div class="ph-name" id="sidebarPhName">Loading…</div>
+      <div class="ph-sub" id="sidebarUserEmail"></div>
     </div>
-    <!-- User menu dropdown -->
-    <div class="user-menu-dropdown" id="userMenuDropdown">
-      <a href="#" onclick="openProfileModal();closeUserMenu();return false;" class="user-menu-item">👤 Edit Profile</a>
-      <a href="#" onclick="navigateTo('settings');closeUserMenu();return false;" class="user-menu-item">⚙️ Settings</a>
-      <div class="user-menu-divider"></div>
-      <a href="#" onclick="doLogout();return false;" class="user-menu-item user-menu-danger">🚪 Log Out</a>
-      <a href="#" onclick="openDeleteAccountModal();return false;" class="user-menu-item user-menu-danger">🗑 Delete Account</a>
-    </div>
+    <!-- Dedicated Log Out button — always visible -->
+    <button class="sf-logout-btn" onclick="doLogout()" title="Log out" aria-label="Log out">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
   </div>
 </aside>
 
@@ -358,8 +359,33 @@
 
   <!-- ═══ SETTINGS ═══ -->
   <section class="page" id="page-settings">
-    <div class="page-header"><h1>Settings</h1><p>Update your pharmacy profile.</p></div>
-    <div class="form-card" style="max-width:600px">
+    <div class="page-header"><h1>Settings</h1><p>Manage your profile, pharmacy details and account.</p></div>
+
+    <!-- ── Profile Picture ── -->
+    <div class="form-card settings-card" style="max-width:640px">
+      <div class="form-card-title">👤 Profile Picture</div>
+      <div class="settings-pfp-row">
+        <div class="settings-pfp-wrap">
+          <div class="settings-pfp-circle" id="settingsPfpCircle" onclick="document.getElementById('settingsPfpInput').click()" title="Click to change photo">
+            <img id="settingsPfpImg" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%"/>
+            <span id="settingsPfpInitials" style="font-size:2rem;font-weight:800;color:#fff"></span>
+            <div class="settings-pfp-overlay"><span>📷</span><small>Change</small></div>
+          </div>
+          <input type="file" id="settingsPfpInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="settingsUploadPfp(event)"/>
+        </div>
+        <div class="settings-pfp-info">
+          <p style="font-size:.88rem;color:var(--text);font-weight:600;margin-bottom:4px">Your profile photo</p>
+          <p style="font-size:.78rem;color:var(--muted);line-height:1.6;margin-bottom:12px">Accepted: JPG, PNG, WebP &bull; Max size: 2 MB<br>Stored securely in your browser. Shown in the sidebar.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn-secondary btn-sm" onclick="document.getElementById('settingsPfpInput').click()">📷 Upload Photo</button>
+            <button class="btn-secondary btn-sm" id="settingsPfpRemoveBtn" onclick="settingsRemovePfp()" style="display:none">✕ Remove Photo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Pharmacy Profile ── -->
+    <div class="form-card settings-card" style="max-width:640px">
       <div class="form-card-title">🏥 Pharmacy Profile</div>
       <div class="form-grid">
         <div class="form-group span-2"><label>Pharmacy Name</label><input type="text" id="setPhName"/></div>
@@ -372,14 +398,41 @@
       <div class="form-actions"><button class="btn-primary" onclick="saveSettings()">💾 Save Profile</button></div>
     </div>
 
-    <!-- DANGER ZONE -->
-    <div class="form-card danger-zone" style="max-width:600px;margin-top:24px">
-      <div class="form-card-title" style="color:#dc2626">⚠️ Danger Zone</div>
-      <p style="color:var(--muted);font-size:.88rem;margin-bottom:18px;line-height:1.6">This action is permanent and cannot be undone. To log out, use the user menu at the bottom of the sidebar.</p>
-      <div class="form-actions" style="justify-content:flex-start;gap:12px;margin-top:0">
-        <button class="btn-danger" onclick="openDeleteAccountModal()">🗑 Delete My Account</button>
+    <!-- ── Account ── -->
+    <div class="form-card settings-card" style="max-width:640px">
+      <div class="form-card-title">🔐 Account</div>
+      <div class="acct-action-list">
+
+        <div class="acct-action-item">
+          <div class="acct-action-icon acct-blue">➕</div>
+          <div class="acct-action-body">
+            <div class="acct-action-title">Add Another Account</div>
+            <div class="acct-action-desc">Sign in to or register a different account. Your current data stays safe.</div>
+          </div>
+          <button class="btn-secondary btn-sm" onclick="doAddAnotherAccount()">Switch</button>
+        </div>
+
+        <div class="acct-action-item">
+          <div class="acct-action-icon acct-green">🚪</div>
+          <div class="acct-action-body">
+            <div class="acct-action-title">Log Out</div>
+            <div class="acct-action-desc">End your current session. Your data remains intact and you can log back in anytime.</div>
+          </div>
+          <button class="btn-secondary btn-sm" onclick="doLogout()">Log Out</button>
+        </div>
+
+        <div class="acct-action-item acct-action-item--danger">
+          <div class="acct-action-icon acct-red">🗑</div>
+          <div class="acct-action-body">
+            <div class="acct-action-title">Delete Account</div>
+            <div class="acct-action-desc">Permanently remove your account and all associated data. This cannot be undone.</div>
+          </div>
+          <button class="btn-secondary btn-sm acct-delete-btn" onclick="openDeleteAccountModal()">Delete</button>
+        </div>
+
       </div>
     </div>
+
   </section>
 
 </div><!-- end main-wrapper -->
