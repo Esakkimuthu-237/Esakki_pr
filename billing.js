@@ -12,6 +12,7 @@ const CART_KEY = 'pharmacare_cart_v2';
 let cart = loadCartFromSession();
 let billMedicines = [];   // loaded from DB
 let _isSaving = false;    // double-submit guard
+let _dbReady  = false;    // set true once DB.init() resolves (via app.js hook)
 
 /* ── Session persistence ── */
 function saveCartToSession() {
@@ -31,6 +32,7 @@ function clearCartSession() {
    LOAD MEDICINES (called when billing page opens)
 ════════════════════════════════════════════════════════════════ */
 async function loadBillingMedicines() {
+  if (!_dbReady) return;   // DB not ready yet — will be called by onBillingDBReady
   try {
     billMedicines = await DB.getMedicines();
   } catch(err) {
@@ -130,7 +132,7 @@ document.addEventListener('click', e => {
 let _selectedMed = null;
 
 function selectMedicine(medId) {
-  _selectedMed = billMedicines.find(m => m.id === medId);
+  _selectedMed = billMedicines.find(m => String(m.id) === String(medId));
   if (!_selectedMed) { APP.toast('Medicine not found. Try refreshing.', 'error'); return; }
 
   closeDropdown();
@@ -732,12 +734,16 @@ function debounce(fn, delay) {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   INIT: load medicines + render cart from session
+   DB-READY HOOK  — called by app.js AFTER DB.init() resolves.
+   This fixes the race condition where billing.js called
+   loadBillingMedicines() before DB._pharmacy was set.
 ════════════════════════════════════════════════════════════════ */
-(async () => {
+window.onBillingDBReady = async function() {
+  _dbReady = true;
+  if (billSearchInput) billSearchInput.disabled = false;
   await loadBillingMedicines();
-  renderCart();  // restore cart from sessionStorage on first load
-})();
+  renderCart();   // restore cart from sessionStorage
+};
 
 /* ── Expose to global scope ── */
 window.selectMedicine   = selectMedicine;

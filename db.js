@@ -201,6 +201,7 @@ async function dbSaveInvoice(invoiceData, items) {
     medicine_id:      item.medicineId,
     medicine_name:    item.medicineName,
     batch_number:     item.batchNumber,
+    expiry_date:      item.expiryDate || null,
     quantity:         item.quantity,
     unit_price:       item.unitPrice,
     discount_percent: item.discountPercent || 0,

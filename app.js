@@ -85,6 +85,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await loadSupplierDropdown();
     await renderDashboard();
+
+    // Notify billing.js that DB is ready (fixes medicine loading race condition)
+    if (typeof window.onBillingDBReady === 'function') {
+      window.onBillingDBReady();
+    }
   } catch(err) {
     console.error('Boot error', err);
     toast('Failed to connect to database. Check your Supabase config.', 'error');
