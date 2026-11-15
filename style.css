@@ -799,3 +799,128 @@ textarea { resize: vertical; }
   .acct-action-item { flex-wrap: wrap; }
   .acct-action-item > button { margin-left: auto; }
 }
+
+
+/* ══ DASHBOARD: NEW BILLING BUTTON ══ */
+.dash-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.btn-new-billing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: .92rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99,102,241,.35);
+  transition: background .18s, transform .15s, box-shadow .18s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-new-billing:hover {
+  background: var(--primary-dark, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(99,102,241,.45);
+}
+.btn-new-billing:active { transform: translateY(0); }
+
+/* ══ DASHBOARD: 30-DAY EXPIRY ALERT PANEL ══ */
+.stat-card.amber { border-color: #f59e0b; }
+.stat-card.amber .stat-number { color: #d97706; }
+
+.expiry-alert-panel {
+  background: var(--surface);
+  border: 1.5px solid #fbbf24;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.eap-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: linear-gradient(90deg,#fffbeb,#fef3c7);
+  border-bottom: 1px solid #fde68a;
+}
+[data-theme="dark"] .eap-header {
+  background: linear-gradient(90deg,rgba(245,158,11,.12),rgba(245,158,11,.06));
+  border-bottom-color: rgba(245,158,11,.2);
+}
+.eap-icon { font-size: 1.1rem; }
+.eap-title { font-weight: 700; font-size: .95rem; color: var(--text); flex: 1; }
+.eap-view-all {
+  font-size: .78rem;
+  font-weight: 600;
+  color: var(--primary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 0;
+}
+.eap-view-all:hover { text-decoration: underline; }
+.eap-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0;
+}
+.eap-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.eap-item:last-child { border-bottom: none; }
+.eap-item:hover { background: var(--surface-alt); }
+.eap-badge {
+  flex-shrink: 0;
+  min-width: 56px;
+  text-align: center;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: .72rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.eap-badge.expired  { background: #fee2e2; color: #b91c1c; }
+.eap-badge.critical { background: #fef9c3; color: #854d0e; }
+.eap-badge.warning  { background: #fef3c7; color: #92400e; }
+.eap-badge.ok       { background: #dcfce7; color: #15803d; }
+.eap-info { flex: 1; min-width: 0; }
+.eap-name { font-weight: 600; font-size: .86rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eap-meta { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+
+/* ══ IMPROVED PRINT / INVOICE STYLES ══ */
+@media print {
+  /* Show ONLY the print area */
+  body > * { display: none !important; }
+  #printArea { display: block !important; }
+  #printArea, #printArea * { visibility: visible !important; }
+  #printArea {
+    position: fixed !important;
+    left: 0 !important; top: 0 !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .invoice-print { max-width: 100% !important; }
+  /* Thermal-friendly font */
+  .invoice-print { font-size: 11px !important; }
+}
+
+/* Invoice print – taxable amount row */
+.inv-taxable { font-size: .82rem; color: #475569; }
+.inv-cgst-sgst { font-size: .82rem; color: #475569; }

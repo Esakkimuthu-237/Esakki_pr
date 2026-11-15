@@ -588,9 +588,11 @@ function printInvoice(inv, items, totals) {
       '</table>' +
 
       '<div class="inv-totals">' +
-        '<div>Subtotal (before disc): \u20b9' + sub.toFixed(2) + '</div>' +
-        '<div>Discount: -\u20b9' + disc.toFixed(2) + '</div>' +
-        '<div>GST (incl. in price): \u20b9' + gst.toFixed(2) + '</div>' +
+        '<div class="inv-taxable">Subtotal (MRP): \u20b9' + sub.toFixed(2) + '</div>' +
+        (disc > 0 ? '<div class="inv-taxable">Discount: -\u20b9' + disc.toFixed(2) + '</div>' : '') +
+        '<div class="inv-taxable">Taxable Amount: \u20b9' + (grand - gst).toFixed(2) + '</div>' +
+        '<div class="inv-cgst-sgst">CGST: \u20b9' + (gst / 2).toFixed(2) + '</div>' +
+        '<div class="inv-cgst-sgst">SGST: \u20b9' + (gst / 2).toFixed(2) + '</div>' +
         '<div class="inv-grand">Grand Total: \u20b9' + grand.toFixed(2) + '</div>' +
         '<div>Amount Paid: \u20b9' + paid.toFixed(2) + '</div>' +
         (change > 0 ? '<div>Change: \u20b9' + change.toFixed(2) + '</div>' : '') +

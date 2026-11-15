@@ -395,6 +395,16 @@ async function renderDashboard() {
     countUp(document.getElementById('statMonthlySales'), stats.monthlySales  || 0, true);
     countUp(document.getElementById('statTodayCount'),   stats.todayCount    || 0);
 
+    /* 30-day expiry alerts */
+    try {
+      const expiryBatches = await DB.getExpiryAlerts(30);
+      const e30 = document.getElementById('statExpiry30');
+      if (e30) countUp(e30, expiryBatches.length, false);
+      renderExpiryAlertPanel(expiryBatches);
+    } catch(exErr) {
+      console.warn('Expiry alerts error:', exErr.message);
+    }
+
     /* Alert banner */
     const alertN = (stats.expired || 0) + (stats.expiringSoon || 0) + (stats.lowStock || 0);
     const banner  = document.getElementById('alertBanner');
@@ -453,6 +463,52 @@ async function renderDashboard() {
     console.error('Dashboard error', err);
     toast('Error loading dashboard: ' + err.message, 'error');
   }
+}
+
+
+/* ════════════════════════════════════════════════════════════════
+   EXPIRY ALERT PANEL (30-day dashboard widget)
+════════════════════════════════════════════════════════════════ */
+function renderExpiryAlertPanel(batches) {
+  const panel = document.getElementById('expiryAlertPanel');
+  const body  = document.getElementById('expiryAlertBody');
+  if (!panel || !body) return;
+
+  if (!batches || !batches.length) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+
+  body.innerHTML = batches.map(b => {
+    let badgeCls, badgeText;
+    if (b.daysLeft < 0) {
+      badgeCls  = 'expired';
+      badgeText = 'EXPIRED';
+    } else if (b.daysLeft === 0) {
+      badgeCls  = 'expired';
+      badgeText = 'TODAY';
+    } else if (b.daysLeft <= 7) {
+      badgeCls  = 'critical';
+      badgeText = b.daysLeft + 'd left';
+    } else {
+      badgeCls  = 'warning';
+      badgeText = b.daysLeft + 'd left';
+    }
+
+    return '<div class="eap-item">' +
+      '<div class="eap-badge ' + badgeCls + '">' + badgeText + '</div>' +
+      '<div class="eap-info">' +
+        '<div class="eap-name" title="' + esc(b.name) + '">' + esc(b.name) + '</div>' +
+        '<div class="eap-meta">' +
+          'Batch: <strong>' + esc(b.batchNumber) + '</strong>' +
+          ' &bull; Exp: ' + fmtDate(b.expiryDate) +
+          ' &bull; Qty: ' + b.quantity +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -670,59 +726,85 @@ document.getElementById('exportBtn').addEventListener('click', () => {
 ════════════════════════════════════════════════════════════════ */
 async function renderAlerts() {
   const container = document.getElementById('alertsContainer');
-  container.innerHTML =
-    '<div class="empty-state">' +
-      '<div class="empty-icon"><span class="spinner-sm"></span></div>' +
-      '<div class="empty-title">Loading…</div>' +
-    '</div>';
+  container.innerHTML = '<div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">Loading alerts…</div></div>';
+
   try {
-    const meds   = await DB.getMedicines();
-    const alerts = [];
+    const meds = await DB.getMedicines();
+    const now  = new Date(); now.setHours(0, 0, 0, 0);
+    const d7   = new Date(now); d7.setDate(d7.getDate() + 7);
+    const d30  = new Date(now); d30.setDate(d30.getDate() + 30);
+
+    const expired   = [];
+    const critical  = [];   // ≤ 7 days
+    const warning   = [];   // 8–30 days
+    const lowStock  = [];
+
     meds.forEach(m => {
       (m.medicine_batches || []).forEach(b => {
-        const s = getStatus(b.expiry_date, b.quantity, m.min_stock_level);
-        if (s.cls !== 'safe')
-          alerts.push(Object.assign({}, b, { medName: m.name, status: s }));
+        if (!b.is_active || b.quantity <= 0) return;
+        const exp  = new Date(b.expiry_date);
+        const diff = Math.ceil((exp - now) / 86400000);
+        const row  = { medName: m.name, batchNumber: b.batch_number,
+                       expiryDate: b.expiry_date, quantity: b.quantity, diff };
+        if (exp < now)       expired.push(row);
+        else if (exp <= d7)  critical.push(row);
+        else if (exp <= d30) warning.push(row);
       });
+
+      const totalQty = (m.medicine_batches || [])
+        .filter(b => b.is_active !== false)
+        .reduce((s, b) => s + b.quantity, 0);
+      if (totalQty <= (m.min_stock_level || 10)) {
+        lowStock.push({ medName: m.name, totalQty, minStock: m.min_stock_level || 10 });
+      }
     });
 
-    if (!alerts.length) {
+    const total = expired.length + critical.length + warning.length + lowStock.length;
+    if (!total) {
       container.innerHTML =
         '<div class="empty-state">' +
-          '<div class="empty-icon">🎉</div>' +
+          '<div class="empty-icon">✅</div>' +
           '<div class="empty-title">All Clear!</div>' +
-          '<div class="empty-sub">No expired or soon-to-expire medicines.</div>' +
+          '<div class="empty-sub">No expiry or low-stock alerts.</div>' +
         '</div>';
       return;
     }
 
-    alerts.sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date));
-    container.innerHTML = alerts.map(a => {
-      const daysText = a.status.days < 0
-        ? 'Expired ' + Math.abs(a.status.days) + ' day(s) ago'
-        : 'Expires in ' + a.status.days + ' day(s)';
-      const color = a.status.cls === 'expired' ? 'var(--red)' : 'var(--orange)';
-      return '<div class="alert-card ' + a.status.cls + '">' +
-        '<div class="alert-card-icon">' + a.status.icon + '</div>' +
-        '<div class="alert-card-info">' +
-          '<div class="alert-card-name">' + esc(a.medName) + '</div>' +
-          '<div class="alert-card-meta">Batch: <strong>' + esc(a.batch_number) +
-            '</strong> | Expiry: <strong>' + fmtDate(a.expiry_date) +
-            '</strong> | Qty: ' + a.quantity + '</div>' +
-          '<div style="margin-top:5px;font-size:.8rem;font-weight:700;color:' +
-            color + '">' + daysText + '</div>' +
+    function alertTable(title, color, icon, rows, cols) {
+      if (!rows.length) return '';
+      return '<div class="section-card" style="margin-bottom:20px">' +
+        '<div class="section-card-header" style="border-left:4px solid ' + color + ';padding-left:12px">' +
+          '<h2 style="color:' + color + '">' + icon + ' ' + title + ' (' + rows.length + ')</h2>' +
         '</div>' +
-        '<div class="alert-card-badge">' +
-          '<span class="pill ' + a.status.cls + '">' + a.status.label + '</span>' +
-        '</div>' +
-      '</div>';
-    }).join('');
-  } catch(err) {
+        '<div class="table-wrapper"><table class="data-table"><thead><tr>' +
+          cols.map(c => '<th>' + c + '</th>').join('') +
+        '</tr></thead><tbody>' +
+          rows.map(r => '<tr>' +
+            '<td><strong>' + esc(r.medName) + '</strong></td>' +
+            '<td><code>' + esc(r.batchNumber || '—') + '</code></td>' +
+            '<td>' + fmtDate(r.expiryDate || '') + '</td>' +
+            '<td style="text-align:center">' + (r.quantity !== undefined ? r.quantity : (r.totalQty || 0)) + '</td>' +
+            (r.diff !== undefined
+              ? '<td><span style="font-weight:700;color:' + color + '">' +
+                  (r.diff < 0 ? 'Expired ' + Math.abs(r.diff) + 'd ago' :
+                   r.diff === 0 ? 'Today!' : r.diff + ' days') +
+                '</span></td>'
+              : '<td>Min: ' + r.minStock + '</td>') +
+          '</tr>').join('') +
+        '</tbody></table></div></div>';
+    }
+
+    const COLS = ['Medicine', 'Batch', 'Expiry Date', 'Qty', 'Status'];
+
     container.innerHTML =
-      '<div class="empty-state">' +
-        '<div class="empty-title">Error</div>' +
-        '<div class="empty-sub">' + esc(err.message) + '</div>' +
-      '</div>';
+      alertTable('Expired Batches',         '#dc2626', '🚫', expired,   COLS) +
+      alertTable('Expiring Within 7 Days',  '#ea580c', '🔴', critical,  COLS) +
+      alertTable('Expiring Within 30 Days', '#d97706', '🟡', warning,   COLS) +
+      alertTable('Low Stock Items',         '#7c3aed', '📉',
+        lowStock, ['Medicine', 'Batch', 'Expiry', 'Current Qty', 'Min Stock']);
+
+  } catch(err) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-title">Error: ' + esc(err.message) + '</div></div>';
   }
 }
 

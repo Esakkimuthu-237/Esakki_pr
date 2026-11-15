@@ -329,6 +329,48 @@ async function dbGetDashboardStats() {
   return { totalProducts, totalUnits, expired, expiringSoon, lowStock, todaySales, todayCount, monthlySales };
 }
 
+
+/* ================================================================
+   EXPIRY ALERTS  — batches expiring within N days
+   ================================================================ */
+
+async function dbGetExpiryAlerts(daysAhead) {
+  daysAhead = daysAhead || 30;
+  const { data: batches, error } = await SUPA
+    .from('medicine_batches')
+    .select(`
+      id, batch_number, expiry_date, quantity, is_active,
+      medicines ( id, name, generic_name, brand, gst_percent )
+    `)
+    .eq('pharmacy_id', _pharmacy.id)
+    .eq('is_active', true)
+    .gt('quantity', 0)
+    .order('expiry_date', { ascending: true });
+  if (error) throw error;
+
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const cutoff = new Date(now); cutoff.setDate(cutoff.getDate() + daysAhead);
+
+  return (batches || []).filter(b => {
+    const exp = new Date(b.expiry_date);
+    return exp <= cutoff;   // includes already-expired
+  }).map(b => {
+    const exp  = new Date(b.expiry_date);
+    const diff = Math.ceil((exp - now) / 86400000);
+    return {
+      batchId:     b.id,
+      batchNumber: b.batch_number,
+      expiryDate:  b.expiry_date,
+      quantity:    b.quantity,
+      daysLeft:    diff,
+      medicineId:  b.medicines ? b.medicines.id   : null,
+      name:        b.medicines ? b.medicines.name  : '—',
+      genericName: b.medicines ? b.medicines.generic_name : '',
+      brand:       b.medicines ? b.medicines.brand : '',
+    };
+  });
+}
+
 /* ================================================================
    REPORTS
    ================================================================ */
@@ -466,5 +508,6 @@ window.DB = {
   getSalesReport: dbGetSalesReport,
   getTopMedicines: dbGetTopMedicines,
   updatePharmacy: dbUpdatePharmacy,
+  getExpiryAlerts: dbGetExpiryAlerts,
   showMsg: showGlobalMsg
 };

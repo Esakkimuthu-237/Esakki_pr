@@ -74,9 +74,20 @@
 
   <!-- ═══ DASHBOARD ═══ -->
   <section class="page active" id="page-dashboard">
-    <div class="page-header">
-      <h1>Dashboard Overview</h1>
-      <p id="dashGreet">Welcome back! Here's your pharmacy at a glance.</p>
+    <div class="page-header dash-header-row">
+      <div>
+        <h1>Dashboard</h1>
+        <p id="dashGreet">Welcome back! Here's your pharmacy at a glance.</p>
+      </div>
+      <button class="btn-new-billing" onclick="navigateTo('billing')" title="Start a new bill">
+        <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2.5"
+             stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px">
+          <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+          <rect x="9" y="3" width="6" height="4" rx="2"/>
+          <line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="13" y2="16"/>
+        </svg>+ New Billing
+      </button>
     </div>
     <div class="stat-grid">
       <div class="stat-card blue"><div class="stat-icon">💊</div><div class="stat-info"><div class="stat-number loading" id="statTotal">—</div><div class="stat-label">Total Medicines</div></div></div>
@@ -87,6 +98,18 @@
       <div class="stat-card teal"><div class="stat-icon">💰</div><div class="stat-info"><div class="stat-number loading" id="statTodaySales">—</div><div class="stat-label">Today's Sales (₹)</div></div></div>
       <div class="stat-card green"><div class="stat-icon">📈</div><div class="stat-info"><div class="stat-number loading" id="statMonthlySales">—</div><div class="stat-label">Monthly Sales (₹)</div></div></div>
       <div class="stat-card indigo"><div class="stat-icon">🧾</div><div class="stat-info"><div class="stat-number loading" id="statTodayCount">—</div><div class="stat-label">Today's Bills</div></div></div>
+      <div class="stat-card amber"><div class="stat-icon">📅</div><div class="stat-info"><div class="stat-number loading" id="statExpiry30">—</div><div class="stat-label">Expiring in 30 Days</div></div></div>
+    </div>
+
+
+    <!-- 30-day expiry alert panel -->
+    <div id="expiryAlertPanel" style="display:none" class="expiry-alert-panel">
+      <div class="eap-header">
+        <span class="eap-icon">⚠️</span>
+        <span class="eap-title">Medicine Expiry Alerts</span>
+        <button class="btn-link eap-view-all" data-page="alerts">View All Alerts →</button>
+      </div>
+      <div id="expiryAlertBody" class="eap-body"></div>
     </div>
 
     <!-- Charts row -->
