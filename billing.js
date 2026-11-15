@@ -735,7 +735,7 @@ function printInvoice(inv, items, totals) {
       '</div>' +
 
       '<div class="inv-footer">' +
-        'Thank you for your purchase! \u2022 All medicines sold as per doctor's prescription.<br>' +
+        'Thank you for your purchase! \u2022 All medicines sold as per doctor\'s prescription.<br>' +
         'Goods once sold will not be taken back. \u2022 This is a computer-generated invoice.' +
       '</div>' +
     '</div>';
