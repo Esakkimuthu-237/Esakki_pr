@@ -32,11 +32,32 @@ function clearCartSession() {
    LOAD MEDICINES (called when billing page opens)
 ════════════════════════════════════════════════════════════════ */
 async function loadBillingMedicines() {
-  if (!_dbReady) return;   // DB not ready yet — will be called by onBillingDBReady
+  if (!_dbReady) {
+    console.warn('[Billing] loadBillingMedicines called before DB ready – skipping');
+    return;
+  }
+  // Show loading state in search input
+  const input = document.getElementById('billSearch');
+  if (input) { input.placeholder = 'Loading medicines…'; input.disabled = true; }
   try {
+    console.log('[Billing] Fetching medicines from DB…');
     billMedicines = await DB.getMedicines();
+    console.log('[Billing] Medicines loaded:', billMedicines.length,
+      billMedicines.slice(0,3).map(m => m.name));
+    if (!billMedicines.length) {
+      console.warn('[Billing] No medicines returned. Check pharmacy_id and RLS policies.');
+      console.log('[Billing] Pharmacy:', DB.pharmacy());
+    }
+    if (input) {
+      input.placeholder = billMedicines.length
+        ? 'Type medicine name, brand or barcode… (' + billMedicines.length + ' medicines)'
+        : 'No medicines found – add stock first';
+      input.disabled = false;
+    }
   } catch(err) {
+    console.error('[Billing] loadBillingMedicines error:', err);
     APP.toast('Could not load medicines: ' + err.message, 'error');
+    if (input) { input.placeholder = 'Error loading medicines – click ↺ Refresh'; input.disabled = false; }
   }
 }
 
@@ -98,6 +119,15 @@ function highlightMatch(text, query) {
 }
 
 /* ── Main search function ── */
+/* ── Parse a date-only string (YYYY-MM-DD) as LOCAL midnight.
+     new Date('2026-12-31') = midnight UTC = 2026-12-30 18:30 IST → wrong!
+     This helper avoids that trap. ── */
+function localDateOnly(dateStr) {
+  if (!dateStr) return new Date(0);
+  const [y, m, d] = String(dateStr).split('T')[0].split('-').map(Number);
+  return new Date(y, m - 1, d);   // local midnight
+}
+
 function doSearch() {
   _dropIdx = -1;
   const q   = billSearchInput.value.trim();
@@ -105,7 +135,7 @@ function doSearch() {
 
   if (!qLo) { closeDropdown(); return; }
 
-  const now = new Date(); now.setHours(0, 0, 0, 0);
+  const now = new Date(); now.setHours(0, 0, 0, 0);   // local midnight today
 
   /* Filter medicines — match name, generic, brand, barcode */
   const matches = billMedicines.filter(m =>
@@ -126,12 +156,12 @@ function doSearch() {
   }
 
   billSearchResults.innerHTML = matches.map(m => {
-    /* Only non-expired batches with stock */
+    /* Only non-expired batches with stock — use localDateOnly to avoid UTC offset bug */
     const validBatches = (m.medicine_batches || []).filter(b =>
       b.is_active !== false &&
       b.quantity > 0 &&
-      new Date(b.expiry_date) > now
-    ).sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date)); // FEFO order
+      localDateOnly(b.expiry_date) >= now
+    ).sort((a, b) => localDateOnly(a.expiry_date) - localDateOnly(b.expiry_date)); // FEFO
 
     const totalQty = validBatches.reduce((s, b) => s + b.quantity, 0);
     const noStock  = validBatches.length === 0;
@@ -246,7 +276,7 @@ function selectMedicine(medId) {
 
   const now = new Date(); now.setHours(0,0,0,0);
   const validBatches = (_selectedMed.medicine_batches || []).filter(b =>
-    b.quantity > 0 && new Date(b.expiry_date) > now
+    b.quantity > 0 && localDateOnly(b.expiry_date) >= now
   );
 
   /* Name */
@@ -847,10 +877,12 @@ function debounce(fn, delay) {
    loadBillingMedicines() before DB._pharmacy was set.
 ════════════════════════════════════════════════════════════════ */
 window.onBillingDBReady = async function() {
+  console.log('[Billing] DB ready — loading medicines…');
   _dbReady = true;
   if (billSearchInput) billSearchInput.disabled = false;
   await loadBillingMedicines();
   renderCart();   // restore cart from sessionStorage
+  console.log('[Billing] Init complete. Medicine count:', billMedicines.length);
 };
 
 /* ── Expose to global scope ── */

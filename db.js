@@ -11,11 +11,15 @@ let _pharmacy = null;
 let _user     = null;
 
 async function initDB() {
+  console.log('[DB] initDB starting…');
   _user     = await requireAuth();
+  console.log('[DB] Auth OK — user:', _user.id, _user.email);
   _pharmacy = await getOrCreatePharmacy(_user);
+  console.log('[DB] Pharmacy:', _pharmacy.id, _pharmacy.name);
 
   // One-time migration: move localStorage data to Supabase
   await migrateLocalStorage();
+  console.log('[DB] initDB complete');
   return { user: _user, pharmacy: _pharmacy };
 }
 
@@ -24,21 +28,47 @@ async function initDB() {
    ================================================================ */
 
 async function dbGetMedicines() {
+  if (!_pharmacy) {
+    console.error('[DB] dbGetMedicines called before pharmacy loaded!');
+    throw new Error('Pharmacy not initialized. Please refresh and log in again.');
+  }
+  console.log('[DB] dbGetMedicines for pharmacy:', _pharmacy.id, _pharmacy.name);
+
   const { data, error } = await SUPA
     .from('medicines')
     .select(`
-      *,
+      id, name, generic_name, brand, category, hsn_code,
+      gst_percent, barcode, manufacturer, storage_condition,
+      min_stock_level, notes, is_active, pharmacy_id,
       medicine_batches (
         id, batch_number, expiry_date, received_date, marketed_date,
         manufactured_date, quantity, purchase_price, selling_price,
-        supplier_id, is_active
+        supplier_id, is_active, pharmacy_id
       )
     `)
     .eq('pharmacy_id', _pharmacy.id)
     .eq('is_active', true)
     .order('name');
-  if (error) throw error;
-  return data || [];
+
+  if (error) {
+    console.error('[DB] dbGetMedicines Supabase error:', error);
+    throw error;
+  }
+
+  const result = data || [];
+  console.log('[DB] dbGetMedicines returned', result.length, 'medicines');
+  if (result.length > 0) {
+    const sample = result[0];
+    console.log('[DB] Sample medicine:', sample.name,
+      '| batches:', (sample.medicine_batches || []).length,
+      '| gst_percent:', sample.gst_percent);
+  } else {
+    console.warn('[DB] Zero medicines returned! Check:',
+      '1) pharmacy_id matches:', _pharmacy.id,
+      '2) RLS policies allow select',
+      '3) medicines table has rows with is_active=true');
+  }
+  return result;
 }
 
 async function dbAddMedicine(med) {
