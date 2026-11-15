@@ -924,3 +924,188 @@ textarea { resize: vertical; }
 /* Invoice print – taxable amount row */
 .inv-taxable { font-size: .82rem; color: #475569; }
 .inv-cgst-sgst { font-size: .82rem; color: #475569; }
+
+
+/* ══ MEDICINE SEARCH AUTOCOMPLETE DROPDOWN  (v3 — full rewrite) ══ */
+
+/* Wrapper — relative so dropdown positions under it */
+.bill-search-wrap { position: relative; }
+
+/* The input itself */
+.bill-search-input {
+  width: 100%;
+  padding: 11px 44px 11px 42px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: .95rem;
+  background: var(--surface);
+  color: var(--text);
+  outline: none;
+  transition: border-color .18s;
+  box-sizing: border-box;
+}
+.bill-search-input:focus { border-color: var(--primary); }
+
+/* Suppress the browser's native "search" clear (×) button */
+.bill-search-input::-webkit-search-cancel-button,
+.bill-search-input::-webkit-search-decoration { display: none; -webkit-appearance: none; }
+
+/* Dropdown container */
+#billSearchResults {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 2px 8px rgba(0,0,0,.08);
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 9999;
+  animation: dropIn .12s ease;
+}
+#billSearchResults.open { display: block; }
+[data-theme="dark"] #billSearchResults {
+  box-shadow: 0 8px 32px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+  border-color: rgba(255,255,255,.12);
+}
+
+@keyframes dropIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Scrollbar */
+#billSearchResults::-webkit-scrollbar { width: 5px; }
+#billSearchResults::-webkit-scrollbar-track { background: transparent; }
+#billSearchResults::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+/* Empty / no-results state */
+.sd-empty {
+  padding: 18px 20px;
+  color: var(--muted);
+  font-size: .88rem;
+  text-align: center;
+}
+
+/* Each medicine row */
+.sd-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background .12s;
+  user-select: none;
+}
+.sd-item:last-child { border-bottom: none; }
+.sd-item:hover,
+.sd-item.sd-focused {
+  background: var(--surface-alt, rgba(99,102,241,.07));
+  outline: none;
+}
+.sd-item.sd-disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Left icon column */
+.sd-item-left {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99,102,241,.1);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-top: 2px;
+}
+[data-theme="dark"] .sd-item-left { background: rgba(99,102,241,.18); }
+
+/* Body */
+.sd-item-body { flex: 1; min-width: 0; }
+.sd-item-top  { display: flex; align-items: baseline; gap: 8px; justify-content: space-between; }
+.sd-item-bottom {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* Medicine name */
+.sd-name {
+  font-size: .91rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Brand sub-label */
+.sd-brand { font-weight: 400; color: var(--muted); font-size: .78rem; }
+
+/* Generic name */
+.sd-generic { font-size: .76rem; color: var(--muted); }
+
+/* Batch + expiry info */
+.sd-batch {
+  font-size: .74rem;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  background: var(--surface-alt, rgba(0,0,0,.04));
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+[data-theme="dark"] .sd-batch { background: rgba(255,255,255,.07); }
+
+/* Price */
+.sd-price {
+  font-size: .88rem;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Stock badges */
+.sd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: .7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+.sd-badge.in  { background: #dcfce7; color: #15803d; }
+.sd-badge.out { background: #fee2e2; color: #b91c1c; }
+[data-theme="dark"] .sd-badge.in  { background: rgba(21,128,61,.2);  color: #4ade80; }
+[data-theme="dark"] .sd-badge.out { background: rgba(185,28,28,.2);  color: #f87171; }
+
+/* Highlighted match characters */
+.sd-hl {
+  background: rgba(234,179,8,.35);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+  font-weight: 800;
+}
+[data-theme="dark"] .sd-hl { background: rgba(234,179,8,.3); }
+
+/* Existing .search-dropdown fallback (keep for other pages) */
+.search-dropdown:not(#billSearchResults) {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; box-shadow: var(--shadow-md);
+  max-height: 320px; overflow-y: auto; z-index: 9999; display: none;
+}
+.search-dropdown:not(#billSearchResults).open { display: block; }

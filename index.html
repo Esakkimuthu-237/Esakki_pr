@@ -102,16 +102,6 @@
     </div>
 
 
-    <!-- 30-day expiry alert panel -->
-    <div id="expiryAlertPanel" style="display:none" class="expiry-alert-panel">
-      <div class="eap-header">
-        <span class="eap-icon">⚠️</span>
-        <span class="eap-title">Medicine Expiry Alerts</span>
-        <button class="btn-link eap-view-all" data-page="alerts">View All Alerts →</button>
-      </div>
-      <div id="expiryAlertBody" class="eap-body"></div>
-    </div>
-
     <!-- Charts row -->
     <div class="chart-row" id="chartRow">
       <div class="chart-card"><div class="chart-card-title">📈 Monthly Sales Trend</div><canvas id="chartSales" height="180"></canvas></div>
@@ -221,8 +211,8 @@
         <div class="form-card" style="margin-bottom:16px">
           <div class="form-card-title">👤 Customer (Optional)</div>
           <div class="form-grid">
-            <div class="form-group"><label>Customer Name</label><input type="text" id="bCustName" placeholder="Walk-in customer"/></div>
-            <div class="form-group"><label>Phone</label><input type="text" id="bCustPhone" placeholder="Mobile number"/></div>
+            <div class="form-group"><label>Customer Name</label><input type="text" id="bCustName" placeholder="Walk-in customer" autocomplete="off" name="customer-full-name"/></div>
+            <div class="form-group"><label>Phone</label><input type="text" id="bCustPhone" placeholder="Mobile number" autocomplete="off" name="customer-mobile"/></div>
           </div>
         </div>
 
@@ -231,9 +221,13 @@
           <div class="form-card-title">🔍 Search &amp; Add Medicine</div>
           <div class="bill-search-wrap">
             <span class="search-icon">🔍</span>
-            <input type="text" id="billSearch"
+            <input type="search" id="billSearch"
               placeholder="Type medicine name, brand or barcode…"
-              autocomplete="off" aria-label="Search medicine for billing"
+              autocomplete="off" autocorrect="off" autocapitalize="off"
+              spellcheck="false" name="medicine-search-query"
+              aria-label="Search medicine for billing"
+              aria-autocomplete="list" aria-controls="billSearchResults"
+              role="combobox" aria-expanded="false"
               class="bill-search-input"/>
             <button class="btn-secondary btn-sm" onclick="loadBillingMedicines()" title="Refresh stock">↺ Refresh</button>
           </div>

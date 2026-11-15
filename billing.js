@@ -41,87 +41,193 @@ async function loadBillingMedicines() {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   MEDICINE SEARCH BAR
+   MEDICINE SEARCH BAR  — custom autocomplete, no browser suggestions
 ════════════════════════════════════════════════════════════════ */
 const billSearchInput   = document.getElementById('billSearch');
 const billSearchResults = document.getElementById('billSearchResults');
 
-billSearchInput.addEventListener('input', debounce(doSearch, 180));
-billSearchInput.addEventListener('focus', () => { if (billSearchInput.value.trim()) doSearch(); });
+/* Force-disable any lingering browser autofill on the search field */
+billSearchInput.setAttribute('autocomplete',  'off');
+billSearchInput.setAttribute('autocorrect',   'off');
+billSearchInput.setAttribute('autocapitalize','off');
+billSearchInput.setAttribute('spellcheck',    'false');
 
+/* Track keyboard-focused item index inside dropdown */
+let _dropIdx = -1;
+
+billSearchInput.addEventListener('input',   debounce(doSearch, 160));
+billSearchInput.addEventListener('keydown', onSearchKeydown);
+billSearchInput.addEventListener('focus',   () => { if (billSearchInput.value.trim().length) doSearch(); });
+
+/* ── Keyboard navigation inside the dropdown ── */
+function onSearchKeydown(e) {
+  const items = billSearchResults.querySelectorAll('.sd-item:not(.sd-disabled)');
+  if (!items.length) return;
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _dropIdx = (_dropIdx + 1) % items.length;
+    setDropFocus(items);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _dropIdx = (_dropIdx - 1 + items.length) % items.length;
+    setDropFocus(items);
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (_dropIdx >= 0 && items[_dropIdx]) {
+      selectMedicine(items[_dropIdx].dataset.medid);
+    }
+  } else if (e.key === 'Escape') {
+    closeDropdown();
+    billSearchInput.blur();
+  }
+}
+
+function setDropFocus(items) {
+  items.forEach((el, i) => el.classList.toggle('sd-focused', i === _dropIdx));
+  if (items[_dropIdx]) items[_dropIdx].scrollIntoView({ block: 'nearest' });
+}
+
+/* ── Highlight matched characters in the medicine name ── */
+function highlightMatch(text, query) {
+  if (!query) return APP.esc(text);
+  const escaped = APP.esc(text);
+  const escQ    = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escaped.replace(new RegExp('(' + APP.esc(escQ) + ')', 'gi'),
+    '<mark class="sd-hl">$1</mark>');
+}
+
+/* ── Main search function ── */
 function doSearch() {
-  const q = billSearchInput.value.toLowerCase().trim();
-  if (!q) { closeDropdown(); return; }
+  _dropIdx = -1;
+  const q   = billSearchInput.value.trim();
+  const qLo = q.toLowerCase();
 
-  const now = new Date(); now.setHours(0,0,0,0);
+  if (!qLo) { closeDropdown(); return; }
+
+  const now = new Date(); now.setHours(0, 0, 0, 0);
+
+  /* Filter medicines — match name, generic, brand, barcode */
   const matches = billMedicines.filter(m =>
-    m.name.toLowerCase().includes(q) ||
-    (m.generic_name || '').toLowerCase().includes(q) ||
-    (m.brand || '').toLowerCase().includes(q) ||
-    (m.barcode || '').toLowerCase().includes(q)
-  ).slice(0, 15);
+    m.name.toLowerCase().includes(qLo) ||
+    (m.generic_name  || '').toLowerCase().includes(qLo) ||
+    (m.brand         || '').toLowerCase().includes(qLo) ||
+    (m.barcode       || '').toLowerCase().includes(qLo)
+  ).slice(0, 20);
 
   if (!matches.length) {
     billSearchResults.innerHTML =
-      '<div class="sd-empty">No medicines found for "' + APP.esc(q) + '"</div>';
+      '<div class="sd-empty">' +
+        '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:-4px;margin-right:6px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+        'No medicines found for "<strong>' + APP.esc(q) + '</strong>"' +
+      '</div>';
     openDropdown();
     return;
   }
 
   billSearchResults.innerHTML = matches.map(m => {
+    /* Only non-expired batches with stock */
     const validBatches = (m.medicine_batches || []).filter(b =>
-      b.quantity > 0 && new Date(b.expiry_date) > now
-    );
+      b.is_active !== false &&
+      b.quantity > 0 &&
+      new Date(b.expiry_date) > now
+    ).sort((a, b) => new Date(a.expiry_date) - new Date(b.expiry_date)); // FEFO order
+
     const totalQty = validBatches.reduce((s, b) => s + b.quantity, 0);
     const noStock  = validBatches.length === 0;
+    const firstB   = validBatches[0] || null;
 
+    /* Stock badge */
     const stockBadge = noStock
       ? '<span class="sd-badge out">Out of Stock</span>'
-      : '<span class="sd-badge in">Stock: ' + totalQty + '</span>';
+      : '<span class="sd-badge in">' +
+          '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><polyline points="16 21 16 13 8 13 8 21"/><polyline points="3 7 12 2 21 7"/></svg> ' +
+          totalQty + ' units' +
+        '</span>';
 
-    const priceTag = validBatches.length
-      ? '<span class="sd-price">\u20b9' + Number(validBatches[0].selling_price).toFixed(2) + '</span>'
+    /* Price tag */
+    const priceTag = firstB
+      ? '<span class="sd-price">₹' + Number(firstB.selling_price).toFixed(2) + '</span>'
       : '';
+
+    /* Batch info */
+    const batchInfo = firstB
+      ? '<span class="sd-batch">Batch: ' + APP.esc(firstB.batch_number) +
+          ' · Exp: ' + APP.fmtDate(firstB.expiry_date) +
+          (validBatches.length > 1 ? ' <em>(+' + (validBatches.length - 1) + ' more)</em>' : '') +
+        '</span>'
+      : '';
+
+    /* Highlighted name */
+    const hlName = highlightMatch(m.name, q);
+    const hlGeneric = m.generic_name ? highlightMatch(m.generic_name, q) : '';
 
     return '<div class="sd-item' + (noStock ? ' sd-disabled' : '') + '"' +
            (noStock ? '' : ' data-medid="' + m.id + '"') +
-           ' role="option" tabindex="0">' +
-      '<div class="sd-item-main">' +
-        '<span class="sd-name">' + APP.esc(m.name) +
-          (m.brand ? ' <small class="sd-brand">(' + APP.esc(m.brand) + ')</small>' : '') +
-        '</span>' +
-        (m.generic_name ? '<span class="sd-generic">' + APP.esc(m.generic_name) + '</span>' : '') +
+           ' role="option" tabindex="-1">' +
+      '<div class="sd-item-left">' +
+        '<span class="sd-med-icon">💊</span>' +
       '</div>' +
-      '<div class="sd-item-meta">' +
-        (m.category ? '<span>' + APP.esc(m.category) + '</span>' : '') +
-        '<span>GST ' + (m.gst_percent || 0) + '%</span>' +
-        priceTag +
-        stockBadge +
+      '<div class="sd-item-body">' +
+        '<div class="sd-item-top">' +
+          '<span class="sd-name">' + hlName +
+            (m.brand ? ' <small class="sd-brand">· ' + APP.esc(m.brand) + '</small>' : '') +
+          '</span>' +
+          priceTag +
+        '</div>' +
+        '<div class="sd-item-bottom">' +
+          (hlGeneric ? '<span class="sd-generic">' + hlGeneric + '</span>' : '') +
+          batchInfo +
+          stockBadge +
+        '</div>' +
       '</div>' +
     '</div>';
   }).join('');
 
+  /* Update ARIA */
+  billSearchInput.setAttribute('aria-expanded', 'true');
   openDropdown();
 }
 
-/* Delegated click handler (no unsafe onclick in innerHTML) */
+/* Delegated click (no unsafe inline onclick) */
 billSearchResults.addEventListener('click', e => {
-  const item = e.target.closest('[data-medid]');
-  if (item) selectMedicine(item.dataset.medid);
-});
-billSearchResults.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    const item = e.target.closest('[data-medid]');
-    if (item) selectMedicine(item.dataset.medid);
+  const item = e.target.closest('.sd-item[data-medid]');
+  if (item) {
+    e.preventDefault();
+    selectMedicine(item.dataset.medid);
   }
 });
 
-function openDropdown()  { billSearchResults.classList.add('open'); }
-function closeDropdown() { billSearchResults.classList.remove('open'); }
+/* Keyboard select inside the results list */
+billSearchResults.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const item = e.target.closest('.sd-item[data-medid]');
+    if (item) selectMedicine(item.dataset.medid);
+  }
+  if (e.key === 'Escape') closeDropdown();
+});
+
+function openDropdown() {
+  billSearchResults.classList.add('open');
+  billSearchInput.setAttribute('aria-expanded', 'true');
+}
+
+function closeDropdown() {
+  billSearchResults.classList.remove('open');
+  billSearchInput.setAttribute('aria-expanded', 'false');
+  _dropIdx = -1;
+}
 
 /* Close on outside click */
 document.addEventListener('click', e => {
   if (!billSearchInput.contains(e.target) && !billSearchResults.contains(e.target)) {
+    closeDropdown();
+  }
+});
+
+/* Close when navigating away from billing page */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && billSearchResults.classList.contains('open')) {
     closeDropdown();
   }
 });

@@ -395,12 +395,13 @@ async function renderDashboard() {
     countUp(document.getElementById('statMonthlySales'), stats.monthlySales  || 0, true);
     countUp(document.getElementById('statTodayCount'),   stats.todayCount    || 0);
 
-    /* 30-day expiry alerts */
+    /* 30-day expiry alerts — count only (no big panel on dashboard) */
     try {
       const expiryBatches = await DB.getExpiryAlerts(30);
       const e30 = document.getElementById('statExpiry30');
       if (e30) countUp(e30, expiryBatches.length, false);
-      renderExpiryAlertPanel(expiryBatches);
+      /* Store for notification bell tooltip — do NOT render the big panel */
+      window._expiryBatchesCache = expiryBatches;
     } catch(exErr) {
       console.warn('Expiry alerts error:', exErr.message);
     }
@@ -470,9 +471,8 @@ async function renderDashboard() {
    EXPIRY ALERT PANEL (30-day dashboard widget)
 ════════════════════════════════════════════════════════════════ */
 function renderExpiryAlertPanel(batches) {
-  const panel = document.getElementById('expiryAlertPanel');
-  const body  = document.getElementById('expiryAlertBody');
-  if (!panel || !body) return;
+  /* Dashboard expiry panel removed — expiry info lives in Alerts page */
+  return;
 
   if (!batches || !batches.length) {
     panel.style.display = 'none';
